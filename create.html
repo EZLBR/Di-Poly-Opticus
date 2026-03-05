@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Your Glasses</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="page-wrapper">
+  <header class="navbar">
+    <div class="logo">OPTICUS</div>
+    <nav>
+      <a href="index.html">SUNGLASSES</a>
+      <a href="create.html" class="active">CREATE</a>
+      <a href="#" onclick="viewSavedDesigns(); return false;">MY DESIGNS</a>
+    </nav>
+    <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <section class="hero">
+    <h1>CREATE YOUR OWN GLASSES</h1>
+  </section>
+
+  <main class="creator">
+    <div class="controls">
+
+      <h3>MODEL</h3>
+      <div class="model-buttons">
+        <button type="button" id="btnRound" onclick="setModel('round')">ROUND</button>
+        <button type="button" id="btnSquare" onclick="setModel('square')">SQUARE</button>
+      </div>
+
+      <div class="control-row"><span>FRAME WIDTH</span><span class="value" id="valFrameWidth">220</span></div>
+      <input type="range" id="frameWidth" min="150" max="350" value="220">
+
+      <div class="control-row"><span>LENS SIZE</span><span class="value" id="valLensHeight">80</span></div>
+      <input type="range" id="lensHeight" min="50" max="150" value="80">
+
+      <div class="control-row"><span>LEG LENGTH</span><span class="value" id="valLegLength">120</span></div>
+      <input type="range" id="legLength" min="50" max="200" value="120">
+
+      <div class="control-row"><span>THICKNESS</span><span class="value" id="valThickness">6</span></div>
+      <input type="range" id="thickness" min="2" max="15" value="6">
+
+      <div class="control-row"><span>FRAME COLOR</span><span class="value" id="valColor">#111827</span></div>
+      <input type="color" id="frameColor" value="#111827">
+
+      <button class="save-btn" type="button" onclick="saveDesign()">SAVE DESIGN</button>
+      <p class="hint">Drag inside the viewer to rotate. Use scroll to zoom.</p>
+    </div>
+
+    <div class="preview">
+      <div id="threeContainer">
+        <div class="viewer-ui">
+          <button id="btnAuto" class="vbtn primary" type="button">Auto: ON</button>
+
+          <div class="vpad">
+            <button id="rotUp" class="vbtn" type="button">↑</button>
+            <div class="vrow">
+              <button id="rotLeft" class="vbtn" type="button">←</button>
+              <button id="rotRight" class="vbtn" type="button">→</button>
+            </div>
+            <button id="rotDown" class="vbtn" type="button">↓</button>
+          </div>
+
+          <div class="vzoom">
+            <button id="zoomIn" class="vbtn" type="button">＋</button>
+            <button id="zoomOut" class="vbtn" type="button">－</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="designsModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>MY DESIGNS</h3>
+      <button class="modal-close" onclick="closeDesignsModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="designsList"></div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="creator.js"></script>
+</body>
+</html>

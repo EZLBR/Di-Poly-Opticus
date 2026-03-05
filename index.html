@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opticus Marketplace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <header class="navbar">
+    <div class="logo">OPTICUS</div>
+    <nav>
+      <a href="index.html" class="active">SUNGLASSES</a>
+      <a href="create.html">CREATE</a>
+      <a href="#" onclick="viewSavedDesigns(); return false;">MY DESIGNS</a>
+    </nav>
+    <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <section class="hero">
+    <h1>EXPLORE THOUSANDS OF UNIQUE DESIGNS</h1>
+  </section>
+
+  <main class="marketplace">
+    <aside class="filters">
+      <h3>FILTER BY</h3>
+      <label><input type="checkbox" value="round" class="filter-shape"/> Round</label>
+      <label><input type="checkbox" value="square" class="filter-shape"/> Square</label>
+      <label><input type="checkbox" value="metal" class="filter-material"/> Metal</label>
+      <label><input type="checkbox" value="acetate" class="filter-material"/> Acetate</label>
+    </aside>
+
+    <section class="products" id="productGrid"></section>
+  </main>
+
+</div>
+
+<div class="modal" id="designsModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>MY DESIGNS</h3>
+      <button class="modal-close" onclick="closeDesignsModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="designsList"></div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
