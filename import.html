@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import 3D Model</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page-wrapper">
+  <header class="navbar">
+    <div class="logo">OPTICUS</div>
+    <nav>
+      <a href="index.html">SUNGLASSES</a>
+      <a href="create.html">CREATE</a>
+      <a href="import.html" class="active">IMPORT MODEL</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>IMPORT 3D MODEL</h1>
+  </section>
+
+  <main class="creator">
+    <div class="controls">
+      <h3>UPLOAD MODEL</h3>
+
+      <input type="file" id="modelUpload" accept=".glb,.gltf,.obj,.stl">
+
+      <p class="hint">
+        Supported formats: GLB, GLTF, OBJ, STL
+      </p>
+
+      <button class="save-btn" type="button" id="clearBtn">
+        CLEAR MODEL
+      </button>
+    </div>
+
+    <div class="preview">
+      <div id="threeContainer"></div>
+    </div>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  requireRole(["client", "staff"]);
+</script>
+
+<script type="module" src="importer.js"></script>
+</body>
+</html>

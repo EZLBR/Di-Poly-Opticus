@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factory Dashboard - Opticus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: Inter, sans-serif; }
+    .dashboard-page { max-width: 1200px; margin: 0 auto; padding: 30px 24px; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .session-box { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,0.08);
+      background: white;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .table-card {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(15,23,42,0.08);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left;
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(15,23,42,0.08);
+    }
+  </style>
+</head>
+<body>
+  <script src="auth.js"></script>
+  <script>
+    requireRole(["factory"]);
+  </script>
+
+  <main class="dashboard-page">
+    <div class="topbar">
+      <div>
+        <h1 id="factoryTitle">Factory Orders</h1>
+        <p>Orders assigned to this partner factory only.</p>
+      </div>
+
+      <div id="sessionArea"></div>
+    </div>
+
+    <section class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="factoryOrdersBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    renderSessionBadge();
+    renderFactoryOrders();
+  </script>
+</body>
+</html>
