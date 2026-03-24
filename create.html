@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="page-create">
 
 <div class="page-wrapper">
   <header class="navbar">
@@ -20,12 +20,37 @@
     <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">&#9789;</button>
   </header>
 
-  <section class="hero">
-    <h1>CREATE YOUR OWN GLASSES</h1>
+  <section class="hero hero-create">
+    <div class="hero-copy">
+      <span class="eyebrow">Customization Studio</span>
+      <h1>SHAPE A FRAME THAT LOOKS ENGINEERED FOR YOU</h1>
+      <p>
+        Tune proportions, materials and comfort details while keeping the 3D preview front and center.
+        The interface is optimized to help you iterate faster and save better versions.
+      </p>
+      <div class="hero-tags">
+        <span>Live 3D</span>
+        <span>Autosave draft</span>
+        <span>Export ready</span>
+      </div>
+    </div>
+
+    <div class="hero-panel">
+      <div class="hero-card">
+        <span class="hero-card-label">Studio Flow</span>
+        <strong>Adjust, preview, save and export in one workspace</strong>
+        <p>Designed to keep the controls readable without stealing focus from the model.</p>
+      </div>
+    </div>
   </section>
 
   <main class="creator">
     <div class="controls">
+      <div class="controls-intro">
+        <span class="panel-kicker">Design controls</span>
+        <h2>Dial in fit, stance and finish</h2>
+        <p>Every control updates the frame while keeping your current draft close at hand.</p>
+      </div>
 
       <h3>MODEL</h3>
       <div class="model-buttons">
@@ -131,6 +156,11 @@
     </div>
 
     <div class="preview">
+      <div class="preview-head">
+        <span class="panel-kicker">Preview</span>
+        <h2>Inspect the frame in motion</h2>
+        <p>Rotate, zoom and compare the current configuration before saving or exporting.</p>
+      </div>
       <div id="threeContainer">
         <div class="viewer-ui">
           <button id="btnAuto" class="vbtn primary" type="button">Auto: ON</button>
