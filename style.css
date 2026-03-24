@@ -392,6 +392,18 @@ body.dark .control-select option {
   opacity: 0.85;
 }
 
+.design-summary,
+.design-status {
+  margin-top: 4px;
+}
+
+.design-status {
+  font-size: 12px;
+  opacity: 0.72;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .design-row .actions {
   display: flex;
   gap: 8px;

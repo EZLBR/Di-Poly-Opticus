@@ -4,6 +4,7 @@ if (container && typeof THREE !== "undefined") {
   const LS_ACTIVE = "opticus_active_design";
 const LS_ACTIVE_PRODUCT = "opticus_active_product";
 const LS_DESIGNS = "opticus_designs";
+const LS_DRAFT = "opticus_creator_draft";
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf3f6fb);
@@ -91,6 +92,8 @@ let rightTemplePivot = null;
 
 let targetTempleOpen = 0.22;
 let currentTempleOpen = 0.22;
+let initialConfigSnapshot = null;
+let suppressDraftPersistence = false;
 
   const config = {
   model: "round",
@@ -203,6 +206,78 @@ function applyConfigValues(source) {
   config.topBar = source.topBar ?? config.topBar;
   config.bridgeStyle = source.bridgeStyle ?? config.bridgeStyle;
   config.frameProfile = source.frameProfile ?? config.frameProfile;
+}
+
+function cloneConfigState() {
+  return {
+    model: config.model,
+    frameWidth: config.frameWidth,
+    lensSize: config.lensSize,
+    legLength: config.legLength,
+    thickness: config.thickness,
+    bridgeWidth: config.bridgeWidth,
+    color: config.color,
+    isSunglasses: config.isSunglasses,
+    antiReflective: config.antiReflective,
+    prescriptionFileName: config.prescriptionFileName,
+    templeOpen: config.templeOpen,
+    templeStyle: config.templeStyle,
+    topBar: config.topBar,
+    bridgeStyle: config.bridgeStyle,
+    frameProfile: config.frameProfile
+  };
+}
+
+function getSelectionKey() {
+  const activeDesignIndex = localStorage.getItem(LS_ACTIVE);
+  const activeProductId = localStorage.getItem(LS_ACTIVE_PRODUCT);
+
+  if (activeDesignIndex !== null) return `design:${activeDesignIndex}`;
+  if (activeProductId) return `product:${activeProductId}`;
+  return "create:fresh";
+}
+
+function updateDraftStatus(message) {
+  if ($("draftStatus")) $("draftStatus").textContent = message;
+}
+
+function saveDraft() {
+  if (suppressDraftPersistence) return;
+
+  const payload = {
+    selectionKey: getSelectionKey(),
+    updatedAt: new Date().toISOString(),
+    config: cloneConfigState()
+  };
+
+  localStorage.setItem(LS_DRAFT, JSON.stringify(payload));
+  updateDraftStatus("Autosaved locally");
+}
+
+function clearDraft() {
+  localStorage.removeItem(LS_DRAFT);
+  updateDraftStatus("No local draft");
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(LS_DRAFT);
+    if (!raw) {
+      updateDraftStatus("No local draft");
+      return;
+    }
+
+    const draft = JSON.parse(raw);
+    if (!draft || draft.selectionKey !== getSelectionKey() || !draft.config) {
+      updateDraftStatus("No local draft");
+      return;
+    }
+
+    applyConfigValues(draft.config);
+    updateDraftStatus("Draft restored");
+  } catch {
+    updateDraftStatus("Draft unavailable");
+  }
 }
 
 function loadInitialSelection() {
@@ -678,6 +753,7 @@ const outerY = lensY + config.thickness * 0.9 * profile.thicknessMul;
   targetTempleOpen = config.templeOpen;
   currentTempleOpen = config.templeOpen;
   updateTemplePivots(true);
+  saveDraft();
 }
 
   function syncUI() {
@@ -810,6 +886,8 @@ window.setTempleOpen = (value) => {
     designs.push(payload);
     setDesigns(designs);
     localStorage.setItem(LS_ACTIVE, String(designs.length - 1));
+    initialConfigSnapshot = { ...payload };
+    clearDraft();
 
     alert(`Design "${cleanName}" saved successfully!`);
   };
@@ -835,8 +913,23 @@ window.setTempleOpen = (value) => {
 
     designs[activeIndex] = buildPayload(cleanName, current);
     setDesigns(designs);
+    initialConfigSnapshot = { ...designs[activeIndex] };
+    clearDraft();
 
     alert(`Design "${cleanName}" updated successfully!`);
+  };
+
+  window.resetCurrentDesign = () => {
+    if (!initialConfigSnapshot) return;
+
+    suppressDraftPersistence = true;
+    applyConfigValues(initialConfigSnapshot);
+    targetTempleOpen = config.templeOpen;
+    currentTempleOpen = config.templeOpen;
+    syncUI();
+    buildGlasses();
+    suppressDraftPersistence = false;
+    clearDraft();
   };
 
   $("frameWidth")?.addEventListener("input", (e) => {
@@ -885,6 +978,7 @@ window.setTempleOpen = (value) => {
     const file = e.target.files?.[0];
     config.prescriptionFileName = file ? file.name : "";
     syncUI();
+    saveDraft();
   });
 
   $("templeOpen")?.addEventListener("input", (e) => {
@@ -894,6 +988,7 @@ window.setTempleOpen = (value) => {
   if ($("valTempleOpen")) {
     $("valTempleOpen").textContent = String(parseInt(e.target.value, 10));
   }
+  saveDraft();
 });
 
 $("templeStyle")?.addEventListener("change", (e) => {
@@ -1101,6 +1196,8 @@ window.exportModel = (format) => {
 };
 
   loadActiveDesign();
+  initialConfigSnapshot = cloneConfigState();
+  restoreDraft();
   syncUI();
   buildGlasses();
   updateCamera(true);

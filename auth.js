@@ -207,7 +207,7 @@ function renderSessionBadge(containerId = "sessionArea") {
 
   target.innerHTML = `
     <div class="session-box">
-      <span>${session.name} · ${String(session.role).toUpperCase()}</span>
+      <span>${session.name} &middot; ${String(session.role).toUpperCase()}</span>
       <button class="btn" id="logoutBtn" type="button">LOGOUT</button>
     </div>
   `;

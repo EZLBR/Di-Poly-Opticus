@@ -134,7 +134,7 @@
 
       card.innerHTML = `
         <button class="favorite-btn ${favorite ? "active" : ""}" data-fav="${p.id}" aria-label="Favorite">
-          ${favorite ? "♥" : "♡"}
+          ${favorite ? "&hearts;" : "&#9825;"}
         </button>
 
         <div class="product-badge">${p.badge}</div>
