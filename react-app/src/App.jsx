@@ -39,6 +39,12 @@ export default function App() {
   const [route, setRoute] = useState(() => getCurrentRoute());
   const [creatorVisited, setCreatorVisited] = useState(() => getCurrentRoute() === "create");
 
+  function refreshLocalState() {
+    setSession(getSession());
+    setFavoriteState(getFavorites());
+    setDesignState(getDesigns());
+  }
+
   useEffect(() => {
     document.body.classList.toggle("dark", darkMode);
     setTheme(darkMode ? "dark" : "light");
@@ -58,10 +64,23 @@ export default function App() {
       const nextRoute = getCurrentRoute();
       setRoute(nextRoute);
       if (nextRoute === "create") setCreatorVisited(true);
+      refreshLocalState();
     };
 
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  useEffect(() => {
+    const onStorage = () => refreshLocalState();
+    const onFocus = () => refreshLocalState();
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
   }, []);
 
   const allProducts = useMemo(
@@ -146,7 +165,7 @@ export default function App() {
         <div className={route === "marketplace" ? "" : "page-hidden"} aria-hidden={route !== "marketplace"}>
           <section className="hero">
             <h1>EXPLORE THOUSANDS OF UNIQUE DESIGNS</h1>
-            <p>Marketplace already migrated to React, with filters, favorites, session state, and saved-design controls.</p>
+            <p>Browse base models, search community designs, favorite what stands out, and jump straight into customization.</p>
           </section>
 
           <main className="marketplace">

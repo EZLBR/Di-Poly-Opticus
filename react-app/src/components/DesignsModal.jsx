@@ -25,13 +25,13 @@ export default function DesignsModal({
         <div className="modal-head">
           <h3>MY DESIGNS</h3>
           <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
-            ×
+            &times;
           </button>
         </div>
 
         <div className="modal-body">
           {!hasDesigns ? (
-            <p className="hint">No saved designs yet. Create one in the legacy creator first.</p>
+            <p className="hint">No saved designs yet. Create one and save it from the creator.</p>
           ) : (
             designs.map((design, index) => (
               <div className="design-row" key={design.id || index}>

@@ -10,13 +10,15 @@ function ProductPreview({ shape, material }) {
   );
 }
 
-export default function ProductCard({
-  product,
-  favorite,
-  onToggleFavorite,
-  onView,
-  onCustomize
-}) {
+function getShapeLabel(shape) {
+  return shape === "round" ? "Round" : "Square";
+}
+
+function getMaterialLabel(material) {
+  return material === "metal" ? "Metal" : "Acetate";
+}
+
+export default function ProductCard({ product, favorite, onToggleFavorite, onView, onCustomize }) {
   return (
     <article className="product-card">
       <button
@@ -25,7 +27,7 @@ export default function ProductCard({
         onClick={() => onToggleFavorite(product.id)}
         aria-label="Favorite"
       >
-        {favorite ? "♥" : "♡"}
+        {favorite ? "\u2665" : "\u2661"}
       </button>
 
       <div className="product-badge">{product.badge}</div>
@@ -33,8 +35,8 @@ export default function ProductCard({
 
       <div className="product-meta">
         <div className="product-topline">
-          <span>{product.shape}</span>
-          <span>{product.material}</span>
+          <span>{getShapeLabel(product.shape)}</span>
+          <span>{getMaterialLabel(product.material)}</span>
         </div>
 
         <h3>{product.name}</h3>

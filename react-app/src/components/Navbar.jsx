@@ -28,7 +28,7 @@ export default function Navbar({ session, darkMode, route, onNavigate, onOpenDes
         {session ? (
           <div className="session-box">
             <span>
-              {session.name} · {String(session.role).toUpperCase()}
+              {session.name} {"\u00B7"} {String(session.role).toUpperCase()}
             </span>
             <button type="button" className="btn" onClick={onLogout}>
               LOGOUT
