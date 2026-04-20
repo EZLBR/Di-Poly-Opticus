@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Login - Opticus</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+  font-family: Inter, sans-serif;
+  background: linear-gradient(135deg, #f8fafc, #eef2f7);
+}
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1100px;
+  width: 100%;
+  background: white;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.08);
+}
+
+.login-left {
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-left h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.login-left p {
+  opacity: 0.65;
+  margin-bottom: 30px;
+  color: #334155;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #475569;
+}
+
+.field input {
+  height: 50px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 4px rgba(17,24,39,0.08);
+}
+
+.btn-login {
+  height: 50px;
+  border-radius: 14px;
+  border: none;
+  background: #111827;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.back {
+  margin-top: 20px;
+  font-size: 13px;
+  opacity: 0.65;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.back:hover {
+  opacity: 1;
+}
+
+.error {
+  color: #b91c1c;
+  min-height: 22px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.login-right {
+  background: radial-gradient(circle at 30% 30%, #0f172a, #000000);
+  color: white;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-right h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.login-right p {
+  opacity: 0.76;
+  line-height: 1.7;
+}
+
+.demo {
+  margin-top: 30px;
+  font-size: 14px;
+  opacity: 0.72;
+}
+
+.badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.badges span {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .login-container {
+    grid-template-columns: 1fr;
+  }
+
+  .login-left,
+  .login-right {
+    padding: 36px 24px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-left">
+      <h1>Staff Login</h1>
+      <p>Access the internal operations dashboard and monitor the full Opticus system.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="staff@opticus.com" required>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="123456" required>
+        </div>
+
+        <div class="error" id="loginError"></div>
+        <button class="btn-login" type="submit">ENTER PORTAL</button>
+      </form>
+
+      <a href="login.html" class="back">← Back to portals</a>
+    </div>
+
+    <div class="login-right">
+      <h2>Operations Control</h2>
+      <p>
+        Review users, inspect orders and manage the platform from a centralized internal dashboard
+        built for the Opticus team.
+      </p>
+
+      <div class="badges">
+        <span>Global Orders</span>
+        <span>User Management</span>
+        <span>Internal Access</span>
+      </div>
+
+      <div class="demo">
+        Demo: staff@opticus.com / 123456
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+initLoginForm("staff");
+</script>
+</body>
+</html>
