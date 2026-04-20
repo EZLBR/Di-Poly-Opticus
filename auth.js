@@ -114,6 +114,30 @@ function clearSession() {
   localStorage.removeItem(LS_SESSION);
 }
 
+function getPortalMeta(role) {
+  if (role === "client") {
+    return {
+      title: "Client",
+      subtitle: "Marketplace, custom creator and imported 3D models",
+      redirect: "index.html"
+    };
+  }
+
+  if (role === "factory") {
+    return {
+      title: "Partner Factory",
+      subtitle: "Orders assigned to your production line",
+      redirect: "factory-dashboard.html"
+    };
+  }
+
+  return {
+    title: "Staff",
+    subtitle: "Operations overview across the Opticus platform",
+    redirect: "staff-dashboard.html"
+  };
+}
+
 function loginUser(email, password, expectedRole) {
   const users = getUsers();
 
@@ -172,8 +196,15 @@ function goAfterLogin(role) {
 function initLoginForm(expectedRole) {
   const form = document.getElementById("loginForm");
   const error = document.getElementById("loginError");
+  const button = form?.querySelector("button[type='submit']");
+  const roleBadge = document.getElementById("roleBadge");
+  const roleHint = document.getElementById("roleHint");
 
   if (!form) return;
+
+  const meta = getPortalMeta(expectedRole);
+  if (roleBadge) roleBadge.textContent = meta.title.toUpperCase();
+  if (roleHint) roleHint.textContent = meta.subtitle;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -181,16 +212,30 @@ function initLoginForm(expectedRole) {
     const email = document.getElementById("email")?.value || "";
     const password = document.getElementById("password")?.value || "";
 
-    const ok = loginUser(email, password, expectedRole);
-
-    if (!ok) {
-      if (error) {
-        error.textContent = "Invalid credentials for this portal.";
-      }
-      return;
+    if (button) {
+      button.disabled = true;
+      button.dataset.defaultText = button.dataset.defaultText || button.textContent;
+      button.textContent = "ENTERING...";
     }
 
-    goAfterLogin(expectedRole);
+    if (error) error.textContent = "";
+
+    window.setTimeout(() => {
+      const ok = loginUser(email, password, expectedRole);
+
+      if (!ok) {
+        if (error) {
+          error.textContent = "Invalid credentials for this portal.";
+        }
+        if (button) {
+          button.disabled = false;
+          button.textContent = button.dataset.defaultText || "LOGIN";
+        }
+        return;
+      }
+
+      goAfterLogin(expectedRole);
+    }, 220);
   });
 }
 

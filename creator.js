@@ -37,27 +37,31 @@ const LS_DRAFT = "opticus_creator_draft";
   container.querySelector("canvas")?.remove();
   container.appendChild(renderer.domElement);
 
-  const hemi = new THREE.HemisphereLight(0xf8fbff, 0xcdd7e5, 1.8);
-  scene.add(hemi);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.38);
+scene.add(ambient);
 
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
-  key.position.set(5.5, 7.5, 7.5);
-  key.castShadow = true;
-  key.shadow.mapSize.width = 2048;
-  key.shadow.mapSize.height = 2048;
-  key.shadow.camera.left = -10;
-  key.shadow.camera.right = 10;
-  key.shadow.camera.top = 10;
-  key.shadow.camera.bottom = -10;
-  scene.add(key);
+const hemi = new THREE.HemisphereLight(0xf6fbff, 0x7c8796, 1.35);
+scene.add(hemi);
 
-  const rim = new THREE.DirectionalLight(0xe8f0ff, 1.2);
-  rim.position.set(-8, 2, -7);
-  scene.add(rim);
+const key = new THREE.DirectionalLight(0xffffff, 2.8);
+key.position.set(14, 18, 16);
+key.castShadow = true;
+key.shadow.mapSize.width = 2048;
+key.shadow.mapSize.height = 2048;
+key.shadow.camera.left = -12;
+key.shadow.camera.right = 12;
+key.shadow.camera.top = 12;
+key.shadow.camera.bottom = -12;
+key.shadow.bias = -0.0002;
+scene.add(key);
 
-  const fill = new THREE.PointLight(0xffffff, 25, 30, 2);
-  fill.position.set(0, 2.5, 4);
-  scene.add(fill);
+const rim = new THREE.DirectionalLight(0xdbeafe, 1.7);
+rim.position.set(-16, 8, -14);
+scene.add(rim);
+
+const fill = new THREE.DirectionalLight(0xffffff, 0.95);
+fill.position.set(0, 6, 18);
+scene.add(fill);
 
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(7.5, 72),
@@ -486,36 +490,49 @@ currentTempleOpen = config.templeOpen;
   }
 
   function getMaterials() {
-    const frameMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(config.color),
-      roughness: 0.42,
-      metalness: 0.18
-    });
+  const frameMaterial = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(config.color),
+    metalness: 0.2,
+    roughness: 0.35,
+    clearcoat: 1,
+    clearcoatRoughness: 0.1
+  });
 
-    const lensMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(config.isSunglasses ? "#637487" : "#c8ddf2"),
-      transparent: true,
-      opacity: config.isSunglasses ? 0.72 : 0.35,
-      roughness: config.antiReflective ? 0.04 : 0.1,
-      metalness: 0
-    });
+  const lensMaterial = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(config.isSunglasses ? "#111111" : "#c8ddf2"),
+    metalness: 0,
+    roughness: config.antiReflective ? 0.02 : 0.06,
+    transmission: config.isSunglasses ? 0 : 1,
+    thickness: 0.35,
+    ior: 1.5,
+    transparent: true,
+    opacity: config.isSunglasses ? 0.82 : 0.32,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03
+  });
 
-    const padMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf3f5fa,
-      roughness: 0.5,
-      metalness: 0.05,
-      transparent: true,
-      opacity: 0.95
-    });
+  const padMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    roughness: 0.15,
+    transmission: 1,
+    thickness: 0.4,
+    ior: 1.4,
+    transparent: true,
+    opacity: 0.85,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05
+  });
 
-    const hingeMaterial = new THREE.MeshStandardMaterial({
-      color: 0xb9c1cd,
-      roughness: 0.32,
-      metalness: 0.72
-    });
+  const hingeMaterial = new THREE.MeshStandardMaterial({
+    color: 0xb9c1cd,
+    roughness: 0.32,
+    metalness: 0.72
+  });
 
-    return { frameMaterial, lensMaterial, padMaterial, hingeMaterial };
-  }
+  return { frameMaterial, lensMaterial, padMaterial, hingeMaterial };
+}
+
+  
 
   function buildFront(frontGroup, materials, metrics) {
   const { frameMaterial, lensMaterial, padMaterial, hingeMaterial } = materials;
@@ -661,7 +678,9 @@ currentTempleOpen = config.templeOpen;
     false
   );
 
-  addMeshTo(pivot, templeGeo, frameMaterial);
+  const temple = addMeshTo(pivot, templeGeo, frameMaterial);
+  temple.rotation.z = side === -1 ? Math.PI * 0.08 : -Math.PI * 0.08;
+  temple.rotation.y = side === -1 ? Math.PI * 0.05 : -Math.PI * 0.05;
 }
 
   function getFrameProfileSettings() {
@@ -754,6 +773,7 @@ const outerY = lensY + config.thickness * 0.9 * profile.thicknessMul;
   currentTempleOpen = config.templeOpen;
   updateTemplePivots(true);
   saveDraft();
+  group.rotation.x = -0.1;
 }
 
   function syncUI() {

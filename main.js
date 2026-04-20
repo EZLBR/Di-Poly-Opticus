@@ -11,6 +11,8 @@ const LS_ACTIVE = "opticus_active_design";
 
   toggle.addEventListener("click", () => {
     document.body.classList.toggle("dark");
+    document.body.classList.add("theme-switching");
+    window.setTimeout(() => document.body.classList.remove("theme-switching"), 400);
     localStorage.setItem(
       LS_THEME,
       document.body.classList.contains("dark") ? "dark" : "light"
