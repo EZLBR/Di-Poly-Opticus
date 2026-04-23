@@ -7,8 +7,8 @@ const LS_DESIGNS = "opticus_designs";
 const LS_DRAFT = "opticus_creator_draft";
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf3f6fb);
-  scene.fog = new THREE.Fog(0xeaf0f7, 12, 24);
+  scene.background = new THREE.Color(0xf6f8fc);
+  scene.fog = new THREE.Fog(0xf3f6fb, 11, 22);
 
   const W = container.clientWidth || 800;
   const H = container.clientHeight || 480;
@@ -17,74 +17,113 @@ const LS_DRAFT = "opticus_creator_draft";
   const cameraTarget = new THREE.Vector3(0, 0.12, 0);
 
   const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true,
-    powerPreference: "high-performance"
-  });
+  antialias: true,
+  alpha: true,
+  powerPreference: "high-performance"
+});
 
-  renderer.setSize(W, H);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-  if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) {
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-  } else if ("outputEncoding" in renderer && THREE.sRGBEncoding) {
-    renderer.outputEncoding = THREE.sRGBEncoding;
-  }
+if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) {
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+} else if ("outputEncoding" in renderer && THREE.sRGBEncoding) {
+  renderer.outputEncoding = THREE.sRGBEncoding;
+}
 
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  container.querySelector("canvas")?.remove();
-  container.appendChild(renderer.domElement);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.physicallyCorrectLights = true;
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.38);
+container.querySelector("canvas")?.remove();
+container.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.22);
 scene.add(ambient);
 
-const hemi = new THREE.HemisphereLight(0xf6fbff, 0x7c8796, 1.35);
+const hemi = new THREE.HemisphereLight(0xf8fbff, 0x7a8697, 1.55);
 scene.add(hemi);
 
-const key = new THREE.DirectionalLight(0xffffff, 2.8);
-key.position.set(14, 18, 16);
+const key = new THREE.DirectionalLight(0xffffff, 3.6);
+key.position.set(12, 16, 18);
 key.castShadow = true;
 key.shadow.mapSize.width = 2048;
 key.shadow.mapSize.height = 2048;
-key.shadow.camera.left = -12;
-key.shadow.camera.right = 12;
-key.shadow.camera.top = 12;
-key.shadow.camera.bottom = -12;
-key.shadow.bias = -0.0002;
+key.shadow.camera.left = -10;
+key.shadow.camera.right = 10;
+key.shadow.camera.top = 10;
+key.shadow.camera.bottom = -10;
+key.shadow.bias = -0.00018;
 scene.add(key);
 
-const rim = new THREE.DirectionalLight(0xdbeafe, 1.7);
-rim.position.set(-16, 8, -14);
-scene.add(rim);
-
-const fill = new THREE.DirectionalLight(0xffffff, 0.95);
-fill.position.set(0, 6, 18);
+const fill = new THREE.DirectionalLight(0xdbeafe, 1.45);
+fill.position.set(-12, 7, 10);
 scene.add(fill);
 
-  const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(7.5, 72),
-    new THREE.ShadowMaterial({ opacity: 0.14 })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.45;
-  floor.receiveShadow = true;
-  scene.add(floor);
+const rim = new THREE.DirectionalLight(0xffffff, 1.8);
+rim.position.set(-14, 10, -16);
+scene.add(rim);
 
-  const pedestal = new THREE.Mesh(
-    new THREE.CylinderGeometry(2.15, 2.4, 0.18, 48),
-    new THREE.MeshStandardMaterial({
-      color: 0xfafcff,
-      roughness: 0.92,
-      metalness: 0.04,
-      transparent: true,
-      opacity: 0.96
-    })
-  );
-  pedestal.position.y = -1.38;
-  pedestal.receiveShadow = true;
-  scene.add(pedestal);
+const topAccent = new THREE.PointLight(0xeaf4ff, 14, 24, 2);
+topAccent.position.set(0, 4.2, 3.2);
+scene.add(topAccent);
+
+const sideAccent = new THREE.PointLight(0xcfe5ff, 9, 18, 2);
+sideAccent.position.set(3.2, 1.1, 2.8);
+scene.add(sideAccent);
+
+  const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(8.8, 96),
+  new THREE.ShadowMaterial({ opacity: 0.22 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -1.52;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const stageBase = new THREE.Mesh(
+  new THREE.CylinderGeometry(2.55, 2.85, 0.22, 64),
+  new THREE.MeshPhysicalMaterial({
+    color: 0xf8fbff,
+    roughness: 0.72,
+    metalness: 0.08,
+    clearcoat: 1,
+    clearcoatRoughness: 0.18
+  })
+);
+stageBase.position.y = -1.42;
+stageBase.receiveShadow = true;
+stageBase.castShadow = false;
+scene.add(stageBase);
+
+const stagePlate = new THREE.Mesh(
+  new THREE.CylinderGeometry(2.12, 2.26, 0.08, 64),
+  new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    roughness: 0.28,
+    metalness: 0.12,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05
+  })
+);
+stagePlate.position.y = -1.28;
+stagePlate.receiveShadow = true;
+scene.add(stagePlate);
+
+const haloRing = new THREE.Mesh(
+  new THREE.TorusGeometry(2.05, 0.035, 18, 80),
+  new THREE.MeshBasicMaterial({
+    color: 0xdbeafe,
+    transparent: true,
+    opacity: 0.42
+  })
+);
+haloRing.rotation.x = Math.PI / 2;
+haloRing.position.y = -1.235;
+scene.add(haloRing);
 
   const group = new THREE.Group();
   scene.add(group);
@@ -116,6 +155,8 @@ let suppressDraftPersistence = false;
   bridgeStyle: "soft",
   frameProfile: "medium"
 };
+
+  window.config = config;
 
   const baseProductsMap = {
   "base-round-metal": {
@@ -492,50 +533,73 @@ currentTempleOpen = config.templeOpen;
   function getMaterials() {
   const frameMaterial = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(config.color),
-    metalness: 0.2,
-    roughness: 0.35,
+    metalness: config.isSunglasses ? 0.42 : 0.24,
+    roughness: config.isSunglasses ? 0.16 : 0.28,
     clearcoat: 1,
-    clearcoatRoughness: 0.1
+    clearcoatRoughness: 0.025,
+    reflectivity: 1,
+    envMapIntensity: 1.7,
+    sheen: 0.22,
+    sheenRoughness: 0.22,
+    emissive: new THREE.Color(config.color).multiplyScalar(0.03),
   });
 
   const lensMaterial = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(config.isSunglasses ? "#111111" : "#c8ddf2"),
+    color: new THREE.Color(config.isSunglasses ? "#151b26" : "#dbeafe"),
     metalness: 0,
-    roughness: config.antiReflective ? 0.02 : 0.06,
-    transmission: config.isSunglasses ? 0 : 1,
-    thickness: 0.35,
-    ior: 1.5,
+    roughness: config.antiReflective ? 0.004 : 0.035,
+    transmission: config.isSunglasses ? 0.12 : 0.94,
+    thickness: config.isSunglasses ? 0.38 : 0.62,
+    ior: 1.52,
     transparent: true,
-    opacity: config.isSunglasses ? 0.82 : 0.32,
+    opacity: config.isSunglasses ? 0.88 : 0.36,
     clearcoat: 1,
-    clearcoatRoughness: 0.03
+    clearcoatRoughness: 0.008,
+    attenuationDistance: config.isSunglasses ? 0.8 : 1.9,
+    attenuationColor: new THREE.Color(
+      config.isSunglasses ? "#0f172a" : "#cfe7ff"
+    ),
+    envMapIntensity: 1.45
   });
 
   const padMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    roughness: 0.15,
-    transmission: 1,
-    thickness: 0.4,
-    ior: 1.4,
+    color: 0xf8fafc,
+    roughness: 0.045,
+    transmission: 0.85,
+    thickness: 0.45,
+    ior: 1.38,
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.86,
     clearcoat: 1,
-    clearcoatRoughness: 0.05
+    clearcoatRoughness: 0.015,
+    envMapIntensity: 0.9
   });
 
-  const hingeMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb9c1cd,
-    roughness: 0.32,
-    metalness: 0.72
+  const hingeMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xc7d0dc,
+    roughness: 0.18,
+    metalness: 0.92,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+    envMapIntensity: 1.8
   });
 
-  return { frameMaterial, lensMaterial, padMaterial, hingeMaterial };
+  const screwMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xe5e7eb,
+    roughness: 0.16,
+    metalness: 1,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+    envMapIntensity: 2
+  });
+
+  return { frameMaterial, lensMaterial, padMaterial, hingeMaterial, screwMaterial };
 }
 
   
 
   function buildFront(frontGroup, materials, metrics) {
-  const { frameMaterial, lensMaterial, padMaterial, hingeMaterial } = materials;
+  const { frameMaterial, lensMaterial, padMaterial, hingeMaterial, screwMaterial } = materials;
   const {
     frameDepth,
     lensDepth,
@@ -635,7 +699,7 @@ currentTempleOpen = config.templeOpen;
     position: { x: 0, y: -0.03, z: adjustedFrameDepth * 0.02 }
   });
 
-  const hingeGeo = new THREE.BoxGeometry(0.12, 0.12, 0.16);
+  const hingeGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.18, 24);
 
   addMeshTo(frontGroup, hingeGeo, hingeMaterial, {
     position: { x: -hingeX, y: 0.04, z: -0.03 }
@@ -644,6 +708,20 @@ currentTempleOpen = config.templeOpen;
   addMeshTo(frontGroup, hingeGeo.clone(), hingeMaterial, {
     position: { x: hingeX, y: 0.04, z: -0.03 }
   });
+
+  const screwGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.018, 24);
+
+[-1, 1].forEach((side) => {
+  addMeshTo(frontGroup, screwGeo.clone(), screwMaterial, {
+    position: { x: side * hingeX, y: 0.075, z: 0.065 },
+    rotation: { x: Math.PI / 2 }
+  });
+
+  addMeshTo(frontGroup, screwGeo.clone(), screwMaterial, {
+    position: { x: side * hingeX, y: 0.005, z: 0.065 },
+    rotation: { x: Math.PI / 2 }
+  });
+});
 
   const padGeo = new THREE.SphereGeometry(0.11, 18, 18);
 
@@ -670,15 +748,18 @@ currentTempleOpen = config.templeOpen;
   pivot.position.set(side * hingeX, 0.02, -0.06);
   pivot.rotation.set(0, 0, 0);
 
+  const templeCurve = makeTempleCurve(templeLength, side, config.templeStyle);
+
   const templeGeo = new THREE.TubeGeometry(
-    makeTempleCurve(templeLength, side, config.templeStyle),
-    48,
+    templeCurve,
+    64,
     templeRadius,
-    14,
+    18,
     false
   );
 
   const temple = addMeshTo(pivot, templeGeo, frameMaterial);
+
   temple.rotation.z = side === -1 ? Math.PI * 0.08 : -Math.PI * 0.08;
   temple.rotation.y = side === -1 ? Math.PI * 0.05 : -Math.PI * 0.05;
 }
@@ -766,8 +847,8 @@ const outerY = lensY + config.thickness * 0.9 * profile.thicknessMul;
   buildTemple(leftTemplePivot, materials, -1, metrics);
   buildTemple(rightTemplePivot, materials, 1, metrics);
 
-  glassesRoot.rotation.set(-0.06, 0.42, 0.03);
-  glassesRoot.position.y = -0.02;
+  glassesRoot.rotation.set(-0.08, 0.58, 0.02);
+  glassesRoot.position.set(0, 0.02, 0);
 
   targetTempleOpen = config.templeOpen;
   currentTempleOpen = config.templeOpen;
@@ -909,7 +990,7 @@ window.setTempleOpen = (value) => {
     initialConfigSnapshot = { ...payload };
     clearDraft();
 
-    alert(`Design "${cleanName}" saved successfully!`);
+    setStatus("Design saved ✓");
   };
 
   window.updateCurrentDesign = () => {
@@ -936,7 +1017,7 @@ window.setTempleOpen = (value) => {
     initialConfigSnapshot = { ...designs[activeIndex] };
     clearDraft();
 
-    alert(`Design "${cleanName}" updated successfully!`);
+   setStatus("Design updated ✓");
   };
 
   window.resetCurrentDesign = () => {
@@ -1032,8 +1113,8 @@ $("frameProfile")?.addEventListener("change", (e) => {
 });
 
   function zoom(step) {
-    targetRadius = clamp(targetRadius + step, 5.1, 14);
-  }
+  targetRadius = clamp(targetRadius + step, 4.6, 13.2);
+}
 
   function rotate(dx, dy) {
     targetYaw += dx * 0.15;
@@ -1085,13 +1166,13 @@ $("frameProfile")?.addEventListener("change", (e) => {
   renderer.domElement.addEventListener("pointerleave", stopDragging);
 
   renderer.domElement.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      targetRadius = clamp(targetRadius + e.deltaY * 0.01, 5.1, 14);
-    },
-    { passive: false }
-  );
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    targetRadius = clamp(targetRadius + e.deltaY * 0.008, 4.6, 13.2);
+  },
+  { passive: false }
+);
 
   window.addEventListener("resize", () => {
     const w = container.clientWidth || 800;
@@ -1148,6 +1229,56 @@ function cloneForExport() {
   exportRoot.updateMatrixWorld(true);
 
   return exportRoot;
+}
+
+function cloneForExport() {
+  if (!glassesRoot) return null;
+
+  const exportRoot = glassesRoot.clone();
+  exportRoot.rotation.set(0, 0, 0);
+  exportRoot.position.set(0, 0, 0);
+  exportRoot.scale.set(1, 1, 1);
+
+  // Reset temple positions for export
+  exportRoot.traverse((child) => {
+    if (child.isGroup && child !== exportRoot) {
+      child.rotation.set(0, 0, 0);
+      child.position.set(0, 0, 0);
+    }
+  });
+
+  return exportRoot;
+}
+
+function getExportFileBaseName() {
+  const designs = getDesigns();
+  const activeIndex = parseInt(localStorage.getItem(LS_ACTIVE) || "-1", 10);
+  const design = designs[activeIndex];
+  return design ? design.name.replace(/[^a-zA-Z0-9]/g, '_') : 'opticus_design';
+}
+
+function downloadTextFile(text, filename, mimeType) {
+  const blob = new Blob([text], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadArrayBuffer(buffer, filename, mimeType) {
+  const blob = new Blob([buffer], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 window.exportModel = (format) => {
@@ -1225,8 +1356,18 @@ window.exportModel = (format) => {
   function animate() {
   requestAnimationFrame(animate);
 
+  const t = performance.now() * 0.001;
+
   if (autoRotate && !isDragging) {
-    targetYaw += 0.0035;
+    targetYaw += 0.0032;
+  }
+
+  if (glassesRoot) {
+    glassesRoot.position.y = 0.02 + Math.sin(t * 1.4) * 0.035;
+  }
+
+  if (haloRing) {
+    haloRing.material.opacity = 0.28 + (Math.sin(t * 1.8) + 1) * 0.06;
   }
 
   updateCamera();
@@ -1246,4 +1387,27 @@ window.exportModel = (format) => {
   rightTemplePivot.rotation.y = currentTempleOpen;
 }
 
+}
+
+function setStatus(msg) {
+  const el = document.getElementById("studioStatus");
+  if (!el) return;
+
+  el.innerText = msg;
+  el.classList.add("show");
+
+  setTimeout(() => {
+    el.classList.remove("show");
+  }, 2000);
+}
+
+function applyPreset(id) {
+  const preset = baseProductsMap[id];
+  if (!preset) return;
+
+  applyConfigValues(preset);
+  syncUI();
+  buildGlasses();
+
+  setStatus("Preset applied ✓");
 }
