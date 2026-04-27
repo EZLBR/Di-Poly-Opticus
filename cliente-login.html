@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Login - Opticus</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+  font-family: Inter, sans-serif;
+  background: linear-gradient(135deg, #f8fafc, #eef2f7);
+}
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1100px;
+  width: 100%;
+  background: white;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.08);
+}
+
+.login-left {
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-left h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.login-left p {
+  opacity: 0.6;
+  margin-bottom: 30px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.field input {
+  height: 50px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #111827;
+}
+
+.btn-login {
+  height: 50px;
+  border-radius: 14px;
+  border: none;
+  background: #111827;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.back {
+  margin-top: 20px;
+  font-size: 13px;
+  opacity: 0.6;
+  text-decoration: none;
+}
+
+.login-right {
+  background: radial-gradient(circle at 30% 30%, #111827, #000);
+  color: white;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-right h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.login-right p {
+  opacity: 0.7;
+}
+
+.demo {
+  margin-top: 30px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-wrapper">
+  <div class="login-container">
+
+    <!-- LEFT -->
+    <div class="login-left">
+      <h1>Client Login</h1>
+      <p>Access your designs and start customizing premium frames.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <input type="email" placeholder="client@opticus.com" id="email" required>
+        </div>
+
+        <div class="field">
+          <input type="password" placeholder="Password" id="password" required>
+        </div>
+
+        <button class="btn-login">ENTER PORTAL</button>
+      </form>
+
+      <a href="login.html" class="back">← Back to portals</a>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="login-right">
+      <h2>Opticus Studio</h2>
+      <p>Create, customize and visualize eyewear in a next-gen workflow.</p>
+
+      <div class="demo">
+        Demo: client@opticus.com / 123456
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+initLoginForm("client");
+</script>
+
+</body>
+</html>
