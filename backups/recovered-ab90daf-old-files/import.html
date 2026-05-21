@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Import 3D Model</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-create page-import">
+
+<div class="page-wrapper">
+  <header class="navbar">
+    <div id="sessionArea"></div>
+    <div class="logo">OPTICUS</div>
+    <nav>
+      <a href="index.html" data-i18n="nav-explore">SUNGLASSES</a>
+      <a href="create.html" data-i18n="nav-studio">CREATE</a>
+      <a href="import.html" class="active" data-i18n="nav-import">IMPORT MODEL</a>
+    </nav>
+    <div class="navbar-actions">
+      <div class="language-selector">
+        <select id="languageSelector" aria-label="Select language">
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+      <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">&#9789;</button>
+    </div>
+  </header>
+
+  <section class="hero hero-import">
+    <div class="hero-copy">
+      <span class="eyebrow">Import Lab</span>
+      <h1>IMPORT 3D MODELS INTO THE OPTICUS WORKFLOW</h1>
+      <p>Upload external eyewear files, preview them in motion and clear the stage in one streamlined workspace.</p>
+    </div>
+  </section>
+
+  <main class="creator creator-grid">
+    <div class="controls">
+      <h3>UPLOAD MODEL</h3>
+
+      <input type="file" id="modelUpload" accept=".glb,.gltf,.obj,.stl">
+
+      <p class="hint">
+        Supported formats: GLB, GLTF, OBJ, STL
+      </p>
+
+      <button class="save-btn" type="button" id="clearBtn">
+        CLEAR MODEL
+      </button>
+    </div>
+
+    <div class="preview">
+      <div class="preview-head">
+        <span class="panel-kicker">3D inspection</span>
+        <h2>Preview imported geometry before the next step</h2>
+        <p>Use the animated viewer to inspect scale, silhouette and orientation.</p>
+      </div>
+      <div id="threeContainer"></div>
+    </div>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  requireRole(["client", "staff"]);
+</script>
+
+<script src="translations.js"></script>
+<script type="module" src="importer.js"></script>
+<script src="animations.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opticus Marketplace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-marketplace">
+
+<div class="page-wrapper">
+
+  <header class="navbar">
+    <div id="sessionArea"></div>
+  <div class="logo">OPTICUS</div>
+  <nav>
+    <a href="index.html" class="active" data-i18n="nav-explore">EXPLORE</a>
+    <a href="create.html" data-i18n="nav-studio">STUDIO</a>
+    <a href="import.html" data-i18n="nav-import">IMPORT</a>
+    <a href="#" onclick="viewSavedDesigns(); return false;" data-i18n="nav-my-designs">MY DESIGNS</a>
+  </nav>
+
+  <div class="navbar-actions">
+    <div id="sessionArea"></div>
+    <div class="language-selector">
+      <select id="languageSelector" aria-label="Select language">
+        <option value="en">English</option>
+        <option value="pt">Português</option>
+      </select>
+    </div>
+    <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">&#9789;</button>
+  </div>
+</header>
+
+  <section class="hero hero-marketplace hero-marketplace-product">
+    <div class="hero-copy">
+      <span class="eyebrow" data-i18n="hero-eyebrow-marketplace">3D Eyewear Platform</span>
+      <h1 data-i18n="hero-title-marketplace">Design eyewear that feels made for you.</h1>
+      <p data-i18n="hero-desc-marketplace">
+        Opticus combines a curated marketplace with a real-time 3D studio, so you can start from a base frame,
+        refine the design and move from inspiration to customization in one seamless flow.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary hero-btn" href="create.html" data-i18n="btn-start-studio">START IN THE 3D STUDIO</a>
+        <a class="btn hero-btn" href="#productCatalog" data-i18n="btn-explore-catalog">EXPLORE THE CATALOG</a>
+      </div>
+      <div class="hero-tags product-hero-tags">
+        <span data-i18n="hero-tags-realtime">Real-time 3D</span>
+        <span data-i18n="hero-tags-customizable">Customizable frames</span>
+        <span data-i18n="hero-tags-workflow">Saved design workflow</span>
+      </div>
+    </div>
+
+    <div class="hero-panel hero-panel-product">
+      <div class="hero-card hero-card-product">
+        <span class="hero-card-label" data-i18n="hero-card-label">What makes Opticus different</span>
+        <strong data-i18n="hero-card-title">Start with a frame. End with your own product.</strong>
+        <p data-i18n="hero-card-desc">Browse silhouettes, open them in the studio and fine-tune fit, finish and export-ready details from one product journey.</p>
+      </div>
+      <div class="hero-stats hero-stats-product">
+        <div>
+          <strong data-i18n="hero-stat-1-title">Live</strong>
+          <span data-i18n="hero-stat-1-desc">3D studio workflow</span>
+        </div>
+        <div>
+          <strong data-i18n="hero-stat-2-title">Base + custom</strong>
+          <span data-i18n="hero-stat-2-desc">catalog to creator</span>
+        </div>
+        <div>
+          <strong data-i18n="hero-stat-3-title">Save</strong>
+          <span data-i18n="hero-stat-3-desc">private or published designs</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="product-journey-strip" aria-label="How Opticus works">
+    <article>
+      <span>01</span>
+      <strong data-i18n="journey-01-title">Explore a starting point</strong>
+      <p data-i18n="journey-01-desc">Discover shapes, materials and community concepts in one premium catalog.</p>
+    </article>
+    <article>
+      <span>02</span>
+      <strong data-i18n="journey-02-title">Open the 3D studio</strong>
+      <p data-i18n="journey-02-desc">Adjust silhouette, fit and finish with a live product preview.</p>
+    </article>
+    <article>
+      <span>03</span>
+      <strong data-i18n="journey-03-title">Save or export the design</strong>
+      <p data-i18n="journey-03-desc">Keep iterations locally, publish concepts and export production-ready files.</p>
+    </article>
+  </section>
+
+  <main class="marketplace">
+  <aside class="filters">
+    <div class="panel-kicker" data-i18n="filter-refine">Refine selection</div>
+    <h3 data-i18n="filter-by">FILTER BY</h3>
+
+    <div class="filter-group">
+      <p data-i18n="filter-shape">Shape</p>
+      <label><input type="checkbox" value="round" class="filter-shape" /> <span data-i18n="filter-round">Round</span></label>
+      <label><input type="checkbox" value="square" class="filter-shape" /> <span data-i18n="filter-square">Square</span></label>
+    </div>
+
+    <div class="filter-group">
+      <p data-i18n="filter-material">Material</p>
+      <label><input type="checkbox" value="metal" class="filter-material" /> Metal</label>
+      <label><input type="checkbox" value="acetate" class="filter-material" /> Acetate</label>
+    </div>
+
+    <button id="clearFilters" class="btn">CLEAR FILTERS</button>
+  </aside>
+
+  <section class="catalog" id="productCatalog">
+    <div class="catalog-toolbar">
+      <div class="toolbar-copy">
+        <span class="panel-kicker">Catalog</span>
+        <h2>Pick a frame to customize, not just browse</h2>
+      </div>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search frames, shapes or materials..."
+        aria-label="Search designs"
+      />
+
+      <select id="sortSelect" class="sort-select">
+        <option value="featured">Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A to Z</option>
+      </select>
+    </div>
+
+    <section class="products" id="productGrid"></section>
+  </section>
+</main>
+
+</div>
+
+<div class="modal" id="designsModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>MY DESIGNS</h3>
+      <button class="modal-close" onclick="closeDesignsModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="designsList"></div>
+  </div>
+</div>
+
+  <script src="auth.js"></script>
+<script>
+  requireRole(["client", "staff"]);
+</script>
+
+<script src="translations.js"></script>
+<script src="main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="marketplace.js"></script>
+<script src="marketplace-viewer.js"></script>
+<script src="designs.js"></script>
+
+<script>
+  renderSessionBadge();
+</script>
+<script src="animations.js"></script>
+</body>
+</html>

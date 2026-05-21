@@ -6,126 +6,141 @@
   <title>Create Your Glasses</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style_tryon_ai.css" />
 </head>
 <body class="page-create">
 
 <div class="page-wrapper">
   <header class="navbar">
     <div class="logo">OPTICUS</div>
+
     <nav>
-      <a href="index.html">SUNGLASSES</a>
-      <a href="create.html" class="active">CREATE</a>
-      <a href="import.html">IMPORT MODEL</a>
-      <a href="#" onclick="viewSavedDesigns(); return false;">MY DESIGNS</a>
+      <a href="index.html" data-i18n="nav-explore">EXPLORE</a>
+      <a href="create.html" class="active" data-i18n="nav-studio">STUDIO</a>
+      <a href="import.html" data-i18n="nav-import">IMPORT</a>
+      <a href="#" onclick="viewSavedDesigns(); return false;" data-i18n="nav-my-designs">MY DESIGNS</a>
     </nav>
-    <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">&#9789;</button>
+
+    <div class="navbar-actions">
+      <div id="sessionArea"></div>
+      <div class="language-selector">
+        <select id="languageSelector" aria-label="Select language">
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+      <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode">&#9789;</button>
+    </div>
   </header>
 
-  <section class="hero hero-create hero-create-refined">
+  <section class="hero hero-create hero-create-refined hero-create-product">
     <div class="hero-copy">
-      <span class="eyebrow">Customization Studio</span>
-      <h1>CREATE A FRAME WITH A MORE PREMIUM STUDIO FEEL</h1>
-      <p>
-        Shape silhouette, fit and finish in a cleaner workflow inspired by fashion-led eyewear sites.
-        The controls stay structured while the 3D viewer remains the visual centerpiece.
+      <span class="eyebrow" data-i18n="hero-eyebrow-studio">3D Design Studio</span>
+      <h1 data-i18n="hero-title-studio">Create eyewear in real time.</h1>
+      <p data-i18n="hero-desc-studio">
+        This is the core Opticus experience: choose a silhouette, tune proportions, adjust finish and inspect the result on a live product stage before saving or exporting.
       </p>
+      <div class="hero-actions">
+        <a class="btn primary hero-btn" href="#studioWorkspace" data-i18n="btn-start-shaping">START SHAPING THE FRAME</a>
+        <a class="btn hero-btn" href="#" onclick="viewSavedDesigns(); return false;" data-i18n="btn-open-saved">OPEN SAVED DESIGNS</a>
+      </div>
       <div class="hero-tags">
-        <span>Luxury UI</span>
-        <span>Live 3D</span>
-        <span>Export Ready</span>
+        <span>Live geometry controls</span>
+        <span>Interactive 3D preview</span>
+        <span>Export-ready workflow</span>
       </div>
     </div>
 
-    <div class="hero-panel hero-panel-studio">
-      <div class="hero-card studio-hero-card">
-        <span class="hero-card-label">Studio experience</span>
-        <strong>More editorial. Less dashboard.</strong>
-        <p>Focused sections, softer surfaces and stronger visual hierarchy make the designer feel more premium.</p>
+    <div class="hero-panel hero-panel-studio hero-panel-product">
+      <div class="hero-card studio-hero-card hero-card-product">
+        <span class="hero-card-label">Product workflow</span>
+        <strong>Customize a product, not just a scene.</strong>
+        <p>Every adjustment is part of one flow built for product design: shape, fit, finish, save and export from a single studio surface.</p>
       </div>
 
-      <div class="hero-stats hero-stats-studio">
+      <div class="hero-stats hero-stats-studio hero-stats-product">
         <div>
-          <strong>3</strong>
-          <span>design phases</span>
+          <strong data-i18n="hero-stats-shape">Shape</strong>
+          <span>build the silhouette</span>
         </div>
         <div>
-          <strong>Live</strong>
-          <span>preview loop</span>
+          <strong data-i18n="hero-stats-fit">Fit</strong>
+          <span>tune proportions live</span>
         </div>
         <div>
-          <strong>4</strong>
-          <span>export formats</span>
+          <strong data-i18n="hero-stats-export">Export</strong>
+          <span>carry the concept forward</span>
         </div>
       </div>
     </div>
   </section>
 
-  <main class="creator creator-studio-refined">
+  <main class="creator creator-studio-refined" id="studioWorkspace">
     <aside class="controls studio-controls refined-controls">
       <div class="controls-intro studio-controls-intro">
-        <span class="panel-kicker">Studio workflow</span>
-        <h2>Build the concept in deliberate steps</h2>
-        <p>Organized like a premium product configurator: silhouette first, then fit, then the final finish.</p>
+        <span class="panel-kicker" data-i18n="studio-workflow">Studio workflow</span>
+        <h2 data-i18n="studio-title">Move from idea to product in three steps</h2>
+        <p data-i18n="studio-desc">Start with the silhouette, refine fit and finish, then save or export the concept without leaving the studio.</p>
       </div>
 
       <div class="studio-progress" aria-label="Design steps">
         <div class="studio-step active">
           <span>01</span>
-          <strong>Shape</strong>
+          <strong data-i18n="step-shape">Shape</strong>
         </div>
         <div class="studio-step">
           <span>02</span>
-          <strong>Fit</strong>
+          <strong data-i18n="step-fit">Fit</strong>
         </div>
         <div class="studio-step">
           <span>03</span>
-          <strong>Finish</strong>
+          <strong data-i18n="step-finish">Finish</strong>
         </div>
       </div>
 
       <section class="control-section control-section-featured">
         <div class="section-head">
           <div>
-            <span class="panel-kicker">Silhouette</span>
-            <h3>Pick the base expression</h3>
+            <span class="panel-kicker" data-i18n="silhouette-kicker">Silhouette</span>
+            <h3 data-i18n="silhouette-title">Pick the base expression</h3>
           </div>
-          <p>Define the frame character before tuning the proportions.</p>
+          <p data-i18n="silhouette-desc">Define the frame character before tuning the proportions.</p>
         </div>
 
         <div class="model-buttons model-buttons-premium">
-          <button type="button" id="btnRound" onclick="setModel('round')">ROUND</button>
-          <button type="button" id="btnSquare" onclick="setModel('square')">SQUARE</button>
-          <button type="button" id="btnHexagon" onclick="setModel('hexagon')">HEXAGON</button>
+          <button type="button" id="btnRound" onclick="setModel('round')" data-i18n="btn-round">ROUND</button>
+          <button type="button" id="btnSquare" onclick="setModel('square')" data-i18n="btn-square">SQUARE</button>
+          <button type="button" id="btnHexagon" onclick="setModel('hexagon')" data-i18n="btn-hexagon">HEXAGON</button>
         </div>
       </section>
 
       <section class="control-section">
         <div class="section-head">
           <div>
-            <span class="panel-kicker">Fit</span>
-            <h3>Tune proportions</h3>
+            <span class="panel-kicker" data-i18n="fit-kicker">Fit</span>
+            <h3 data-i18n="fit-title">Tune proportions</h3>
           </div>
-          <p>Use the sliders below to refine size, balance and stance.</p>
+          <p data-i18n="fit-desc">Use the sliders below to refine size, balance and stance.</p>
         </div>
 
         <div class="control-grid refined-control-grid">
           <div class="control-card">
-            <div class="control-row"><span>FRAME WIDTH</span><span class="value" id="valFrameWidth">220</span></div>
+            <div class="control-row"><span data-i18n="control-frame-width">FRAME WIDTH</span><span class="value" id="valFrameWidth">220</span></div>
             <input type="range" id="frameWidth" min="150" max="350" value="220">
           </div>
 
           <div class="control-card">
-            <div class="control-row"><span>LENS SIZE</span><span class="value" id="valLensHeight">80</span></div>
+            <div class="control-row"><span data-i18n="control-lens-size">LENS SIZE</span><span class="value" id="valLensHeight">80</span></div>
             <input type="range" id="lensHeight" min="50" max="150" value="80">
           </div>
 
           <div class="control-card">
-            <div class="control-row"><span>LEG LENGTH</span><span class="value" id="valLegLength">120</span></div>
+            <div class="control-row"><span data-i18n="control-leg-length">LEG LENGTH</span><span class="value" id="valLegLength">120</span></div>
             <input type="range" id="legLength" min="50" max="200" value="120">
           </div>
 
           <div class="control-card">
-            <div class="control-row"><span>THICKNESS</span><span class="value" id="valThickness">6</span></div>
+            <div class="control-row"><span data-i18n="control-thickness">THICKNESS</span><span class="value" id="valThickness">6</span></div>
             <input type="range" id="thickness" min="2" max="15" value="6">
           </div>
         </div>
@@ -134,10 +149,10 @@
       <section class="control-section">
         <div class="section-head">
           <div>
-            <span class="panel-kicker">Finish</span>
-            <h3>Material language</h3>
+            <span class="panel-kicker" data-i18n="finish-kicker">Finish</span>
+            <h3 data-i18n="finish-title">Material language</h3>
           </div>
-          <p>Color, bridge and profile change the whole product mood.</p>
+          <p data-i18n="finish-desc">Color, bridge and profile change the whole product mood.</p>
         </div>
 
         <div class="control-card color-card refined-color-card">
@@ -246,8 +261,8 @@
         <div class="preview-head refined-preview-head">
           <div>
             <span class="panel-kicker">Live prototype</span>
-            <h2>Inspect the frame on a cleaner product stage</h2>
-            <p>Rotate, zoom and review the silhouette in a more fashion-forward presentation inspired by premium eyewear sites. </p>
+            <h2>Review the product as you build it</h2>
+            <p>Rotate, zoom and inspect the frame on a clean stage designed to keep the geometry and finish front and center.</p>
           </div>
 
           <div class="preview-summary refined-preview-summary">
@@ -290,9 +305,29 @@
             <p>Pick the silhouette, tune proportions, then apply finish details for a more natural luxury-brand workflow.</p>
           </article>
         </div>
-      </div>
-    </section>
-  </main>
+
+        <div class="tryon-panel">
+  <div class="tryon-stage">
+    <video id="tryonVideo" autoplay muted playsinline></video>
+    <canvas id="tryonCanvas"></canvas>
+
+    <div id="tryOnOverlayHint" class="tryon-overlay-hint">
+      Camera off · Start try-on to preview the frame
+    </div>
+  </div>
+
+  <div class="tryon-status-card">
+    <span class="panel-kicker">Session</span>
+    <strong id="tryOnStatus">Camera idle</strong>
+    <p>Use em localhost ou HTTPS.</p>
+  </div>
+
+  <div class="tryon-actions">
+    <button type="button" class="btn primary" onclick="startTryOnTracking()">Start Try-On</button>
+    <button type="button" class="btn" onclick="stopTryOnTracking()">Stop</button>
+  </div>
+
+  <div id="aiSuggestions" class="suggestions-list"></div>
 </div>
 
 <div class="modal" id="designsModal" aria-hidden="true">
@@ -310,6 +345,7 @@
   requireRole(["client", "staff"]);
 </script>
 
+<script src="translations.js"></script>
 <script src="main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/exporters/STLExporter.js"></script>
@@ -317,6 +353,10 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/exporters/GLTFExporter.js"></script>
 <script src="designs.js"></script>
 <script src="creator.js"></script>
+<script src="creator_tryon_ai.js"></script>
+<script>
+  renderSessionBadge();
+</script>
 <script src="animations.js"></script>
 </body>
 </html>

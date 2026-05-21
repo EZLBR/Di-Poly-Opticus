@@ -1,23 +1,16 @@
-# Di-Poly-Opticus
+# React + Vite
 
-Projeto web do Opticus com duas frentes ativas:
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-- a aplicacao principal em HTML, CSS e JavaScript na raiz do repositorio
-- um prototipo separado em React + Vite dentro de `react-app/`
+Currently, two official plugins are available:
 
-## Estrutura
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- `index.html`: marketplace principal
-- `create.html`: criador 3D de oculos
-- `designs.js`: gerenciamento da lista de designs salvos
-- `creator.js`: configurador e persistencia local do criador
-- `react-app/`: versao React em desenvolvimento
+## React Compiler
 
-## React app
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Dentro de `react-app/`:
+## Expanding the ESLint configuration
 
-```bash
-npm install
-npm run dev
-```
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

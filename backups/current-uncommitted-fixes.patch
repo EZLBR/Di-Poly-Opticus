@@ -1,0 +1,539 @@
+diff --git a/auth.js b/auth.js
+index cb6e551..80447c3 100644
+--- a/auth.js
++++ b/auth.js
+@@ -76,6 +76,19 @@ const LS_ORDERS = "opticus_orders";
+ 
+     localStorage.setItem(LS_ORDERS, JSON.stringify(demoOrders));
+   }
++
++  const users = getUsers();
++  if (!users.some((user) => user.email === "factory@opticus.com")) {
++    users.push({
++      id: "factory-demo",
++      name: "Factory Demo",
++      email: "factory@opticus.com",
++      password: "123456",
++      role: "factory",
++      factoryName: "Demo Factory"
++    });
++    setUsers(users);
++  }
+ })();
+ 
+ function getUsers() {
+@@ -86,6 +99,10 @@ function getUsers() {
+   }
+ }
+ 
++function setUsers(users) {
++  localStorage.setItem(LS_USERS, JSON.stringify(users));
++}
++
+ function getOrders() {
+   try {
+     return JSON.parse(localStorage.getItem(LS_ORDERS)) || [];
+@@ -145,7 +162,7 @@ function loginUser(email, password, expectedRole) {
+     (u) =>
+       u.email.toLowerCase() === String(email).trim().toLowerCase() &&
+       u.password === password &&
+-      u.role === expectedRole
++      (!expectedRole || u.role === expectedRole)
+   );
+ 
+   if (!user) return false;
+@@ -161,6 +178,31 @@ function loginUser(email, password, expectedRole) {
+   return true;
+ }
+ 
++function createUser({ name, email, password, role, factoryName }) {
++  const users = getUsers();
++  const normalizedEmail = String(email).trim().toLowerCase();
++
++  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
++    return { ok: false, message: "An account with this email already exists." };
++  }
++
++  const user = {
++    id: `${role}-${Date.now()}`,
++    name: String(name).trim(),
++    email: normalizedEmail,
++    password,
++    role
++  };
++
++  if (role === "factory") {
++    user.factoryName = String(factoryName || name).trim();
++  }
++
++  users.push(user);
++  setUsers(users);
++  return { ok: true, user };
++}
++
+ function logoutUser() {
+   clearSession();
+   window.location.href = "login.html";
+@@ -239,6 +281,132 @@ function initLoginForm(expectedRole) {
+   });
+ }
+ 
++function initUnifiedAuthPage() {
++  const tabs = Array.from(document.querySelectorAll("[data-auth-tab]"));
++  const loginForm = document.getElementById("loginForm");
++  const signupForm = document.getElementById("signupForm");
++  const authEyebrow = document.getElementById("authEyebrow");
++  const authTitle = document.getElementById("authTitle");
++  const authSubtitle = document.getElementById("authSubtitle");
++  const signupRole = document.getElementById("signupRole");
++  const factoryNameField = document.getElementById("factoryNameField");
++
++  const copy = {
++    login: {
++      eyebrow: "Welcome back",
++      title: "Access your Opticus account",
++      subtitle: "Use your email and password once - we'll open the right workspace for your account automatically."
++    },
++    signup: {
++      eyebrow: "Create account",
++      title: "Join Opticus",
++      subtitle: "Create a client or factory account and continue into the right workspace."
++    }
++  };
++
++  function setActiveTab(activeTab) {
++    tabs.forEach((tab) => {
++      const isActive = tab.dataset.authTab === activeTab;
++      tab.classList.toggle("is-active", isActive);
++      tab.setAttribute("aria-selected", String(isActive));
++    });
++
++    loginForm?.classList.toggle("auth-form-active", activeTab === "login");
++    signupForm?.classList.toggle("auth-form-active", activeTab === "signup");
++    if (loginForm) loginForm.hidden = activeTab !== "login";
++    if (signupForm) signupForm.hidden = activeTab !== "signup";
++
++    const activeCopy = copy[activeTab];
++    if (authEyebrow) authEyebrow.textContent = activeCopy.eyebrow;
++    if (authTitle) authTitle.textContent = activeCopy.title;
++    if (authSubtitle) authSubtitle.textContent = activeCopy.subtitle;
++  }
++
++  tabs.forEach((tab) => {
++    tab.addEventListener("click", () => setActiveTab(tab.dataset.authTab));
++  });
++
++  signupRole?.addEventListener("change", () => {
++    if (factoryNameField) factoryNameField.hidden = signupRole.value !== "factory";
++  });
++
++  loginForm?.addEventListener("submit", (e) => {
++    e.preventDefault();
++
++    const email = document.getElementById("loginEmail")?.value || "";
++    const password = document.getElementById("loginPassword")?.value || "";
++    const error = document.getElementById("loginError");
++    const button = document.getElementById("loginSubmit");
++
++    if (error) error.textContent = "";
++    if (button) {
++      button.disabled = true;
++      button.dataset.defaultText = button.dataset.defaultText || button.textContent;
++      button.textContent = "ENTERING...";
++    }
++
++    window.setTimeout(() => {
++      const ok = loginUser(email, password);
++      const session = getSession();
++
++      if (!ok || !session) {
++        if (error) error.textContent = "Invalid email or password.";
++        if (button) {
++          button.disabled = false;
++          button.textContent = button.dataset.defaultText || "ENTER OPTICUS";
++        }
++        return;
++      }
++
++      goAfterLogin(session.role);
++    }, 220);
++  });
++
++  signupForm?.addEventListener("submit", (e) => {
++    e.preventDefault();
++
++    const name = document.getElementById("signupName")?.value || "";
++    const role = document.getElementById("signupRole")?.value || "client";
++    const email = document.getElementById("signupEmail")?.value || "";
++    const factoryName = document.getElementById("signupFactoryName")?.value || "";
++    const password = document.getElementById("signupPassword")?.value || "";
++    const confirm = document.getElementById("signupPasswordConfirm")?.value || "";
++    const error = document.getElementById("signupError");
++    const success = document.getElementById("signupSuccess");
++
++    if (error) error.textContent = "";
++    if (success) success.textContent = "";
++
++    if (!String(name).trim() || !String(email).trim() || password.length < 6) {
++      if (error) error.textContent = "Fill all required fields. Password must have at least 6 characters.";
++      return;
++    }
++
++    if (password !== confirm) {
++      if (error) error.textContent = "Passwords do not match.";
++      return;
++    }
++
++    if (role === "factory" && !String(factoryName).trim()) {
++      if (error) error.textContent = "Factory name is required for factory accounts.";
++      return;
++    }
++
++    const result = createUser({ name, email, password, role, factoryName });
++
++    if (!result.ok) {
++      if (error) error.textContent = result.message;
++      return;
++    }
++
++    if (success) success.textContent = "Account created. Opening your workspace...";
++    loginUser(email, password, role);
++    window.setTimeout(() => goAfterLogin(role), 500);
++  });
++
++  setActiveTab("login");
++}
++
+ function renderSessionBadge(containerId = "sessionArea") {
+   const target = document.getElementById(containerId);
+   if (!target) return;
+diff --git a/style.css b/style.css
+index a39fee6..b607055 100644
+--- a/style.css
++++ b/style.css
+@@ -1987,6 +1987,325 @@ body.dark.page-create #threeContainer {
+   }
+ }
+ 
++/* Unified auth page */
++body.page-auth-unified {
++  min-height: 100vh;
++  background:
++    radial-gradient(circle at 12% 10%, rgba(255,255,255,0.9), rgba(255,255,255,0) 26%),
++    linear-gradient(180deg, #eef3f7 0%, #d9e2eb 100%);
++  color: #0f172a;
++}
++
++.auth-shell {
++  width: min(1180px, calc(100% - 32px));
++  min-height: calc(100vh - 40px);
++  margin: 20px auto;
++  display: grid;
++  grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
++  gap: 24px;
++  align-items: stretch;
++}
++
++.auth-surface {
++  border-radius: 30px;
++  border: 1px solid rgba(255,255,255,0.58);
++  box-shadow: 0 30px 90px rgba(15,23,42,0.12);
++  overflow: hidden;
++}
++
++.auth-hero {
++  display: flex;
++  align-items: flex-end;
++  padding: 42px;
++  color: #fff;
++  background:
++    radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 25%),
++    radial-gradient(circle at bottom left, rgba(214,169,110,0.15), transparent 28%),
++    linear-gradient(135deg, #102437 0%, #1e425f 52%, #6d8aa5 100%);
++}
++
++.auth-copy {
++  max-width: 650px;
++}
++
++.auth-badge {
++  display: inline-flex;
++  align-items: center;
++  padding: 8px 12px;
++  border-radius: 999px;
++  border: 1px solid rgba(255,255,255,0.16);
++  background: rgba(255,255,255,0.1);
++  color: rgba(255,255,255,0.86);
++  font-size: 11px;
++  letter-spacing: 0.16em;
++  text-transform: uppercase;
++}
++
++.auth-copy h1 {
++  max-width: 12ch;
++  margin: 18px 0 16px;
++  font-size: 56px;
++  line-height: 0.95;
++  letter-spacing: 0;
++}
++
++.auth-copy > p {
++  max-width: 62ch;
++  color: rgba(255,255,255,0.82);
++  font-size: 16px;
++  line-height: 1.7;
++}
++
++.auth-highlight-card {
++  margin-top: 28px;
++  padding: 22px;
++  border-radius: 24px;
++  border: 1px solid rgba(255,255,255,0.14);
++  background: rgba(255,255,255,0.12);
++  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
++}
++
++.auth-highlight-card strong {
++  display: block;
++  margin: 12px 0 10px;
++  font-size: 24px;
++  line-height: 1.15;
++}
++
++.auth-highlight-card p,
++.auth-feature-list span {
++  color: rgba(255,255,255,0.78);
++  font-size: 14px;
++  line-height: 1.6;
++}
++
++.auth-feature-list {
++  display: grid;
++  grid-template-columns: repeat(3, minmax(0, 1fr));
++  gap: 12px;
++  margin-top: 18px;
++}
++
++.auth-feature-list > div {
++  padding: 16px;
++  border-radius: 18px;
++  border: 1px solid rgba(255,255,255,0.12);
++  background: rgba(8,21,34,0.24);
++}
++
++.auth-feature-list strong,
++.auth-feature-list span {
++  display: block;
++}
++
++.auth-feature-list strong {
++  margin-bottom: 6px;
++}
++
++.auth-panel {
++  padding: 30px;
++  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,251,254,0.88));
++  border-color: rgba(15,23,42,0.08);
++}
++
++.auth-tabs {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: 8px;
++  padding: 6px;
++  margin-bottom: 24px;
++  border-radius: 16px;
++  background: rgba(15,23,42,0.06);
++}
++
++.auth-tab {
++  min-height: 44px;
++  border: 0;
++  border-radius: 12px;
++  background: transparent;
++  color: #64748b;
++  cursor: pointer;
++  font-weight: 700;
++  font-size: 12px;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++}
++
++.auth-tab.is-active {
++  background: #fff;
++  color: #0f172a;
++  box-shadow: 0 10px 24px rgba(15,23,42,0.08);
++}
++
++.auth-panel-head h2 {
++  margin: 10px 0;
++  font-size: 34px;
++  line-height: 1;
++  letter-spacing: 0;
++}
++
++.auth-panel-head p,
++.auth-note,
++.auth-footer-links a {
++  color: #64748b;
++  font-size: 14px;
++  line-height: 1.6;
++}
++
++.auth-demo-box {
++  margin: 22px 0;
++  padding: 18px;
++  border-radius: 20px;
++  border: 1px solid rgba(15,23,42,0.08);
++  background: rgba(15,23,42,0.04);
++}
++
++.auth-demo-grid {
++  display: grid;
++  gap: 10px;
++  margin-top: 12px;
++}
++
++.auth-demo-grid div {
++  display: flex;
++  justify-content: space-between;
++  gap: 12px;
++  padding-bottom: 10px;
++  border-bottom: 1px solid rgba(15,23,42,0.08);
++  font-size: 13px;
++}
++
++.auth-demo-grid div:last-child {
++  padding-bottom: 0;
++  border-bottom: 0;
++}
++
++.auth-demo-grid span {
++  color: #64748b;
++  text-align: right;
++}
++
++.auth-form {
++  display: none;
++  gap: 16px;
++}
++
++.auth-form.auth-form-active {
++  display: grid;
++}
++
++.auth-panel .field-grid {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: 14px;
++}
++
++.auth-panel .field label {
++  display: block;
++  margin-bottom: 7px;
++  color: #475569;
++  font-size: 12px;
++  font-weight: 700;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++}
++
++.auth-panel .field input,
++.auth-panel .field select {
++  width: 100%;
++  min-height: 48px;
++  padding: 0 14px;
++  border-radius: 14px;
++  border: 1px solid rgba(15,23,42,0.12);
++  background: #fff;
++  color: #0f172a;
++  font-size: 14px;
++  outline: none;
++}
++
++.auth-note {
++  padding: 12px 14px;
++  border-radius: 14px;
++  background: rgba(109,138,165,0.12);
++}
++
++.auth-panel .error,
++.auth-panel .success {
++  min-height: 18px;
++  font-size: 13px;
++  line-height: 1.4;
++}
++
++.auth-panel .error {
++  color: #b42318;
++}
++
++.auth-panel .success {
++  color: #027a48;
++}
++
++.btn-login {
++  min-height: 50px;
++  border: 0;
++  border-radius: 14px;
++  background: linear-gradient(135deg, #102437 0%, #214764 55%, #5b7f99 100%);
++  color: #fff;
++  cursor: pointer;
++  font-size: 12px;
++  font-weight: 800;
++  letter-spacing: 0.12em;
++  text-transform: uppercase;
++  box-shadow: 0 16px 28px rgba(33,71,100,0.18);
++}
++
++.auth-footer-links {
++  margin-top: 18px;
++  text-align: center;
++}
++
++.auth-footer-links a {
++  text-decoration: none;
++}
++
++@media (max-width: 980px) {
++  .auth-shell {
++    grid-template-columns: 1fr;
++    min-height: auto;
++  }
++
++  .auth-hero,
++  .auth-panel {
++    padding: 26px;
++  }
++}
++
++@media (max-width: 640px) {
++  .auth-shell {
++    width: min(100% - 20px, 1180px);
++    margin: 10px auto;
++  }
++
++  .auth-copy h1 {
++    max-width: 14ch;
++    font-size: 36px;
++  }
++
++  .auth-feature-list,
++  .auth-panel .field-grid {
++    grid-template-columns: 1fr;
++  }
++
++  .auth-demo-grid div {
++    display: block;
++  }
++
++  .auth-demo-grid span {
++    display: block;
++    margin-top: 4px;
++    text-align: left;
++  }
++}
++
+ /* Portal redesign */
+ body.page-portal {
+   min-height: 100vh;

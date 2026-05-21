@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opticus Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-auth-unified">
+  <main class="auth-shell">
+    <section class="auth-hero auth-surface">
+      <div class="auth-copy">
+        <span class="auth-badge">OPTICUS PLATFORM</span>
+        <h1>One account. The right workspace instantly.</h1>
+        <p>
+          Sign in once and Opticus sends you to the right experience automatically — whether you're browsing the marketplace,
+          managing production, or operating the platform.
+        </p>
+
+        <div class="auth-highlight-card login-card">
+          <span class="panel-kicker">What Opticus unlocks</span>
+          <strong>Real-time 3D eyewear customization</strong>
+          <p>Design, preview and refine frames in one connected workflow built for product creation, not just browsing.</p>
+        </div>
+
+        <div class="auth-feature-list">
+          <div>
+            <strong>3D Creator</strong>
+            <span>Customize frames in real time</span>
+          </div>
+          <div>
+            <strong>Marketplace</strong>
+            <span>Compare, save and continue designs</span>
+          </div>
+          <div>
+            <strong>Factory Flow</strong>
+            <span>Assigned orders and production view</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-panel auth-surface login-card">
+      <div class="auth-tabs" role="tablist" aria-label="Authentication views">
+        <button class="auth-tab is-active" type="button" data-auth-tab="login" aria-selected="true">Sign in</button>
+        <button class="auth-tab" type="button" data-auth-tab="signup" aria-selected="false">Create account</button>
+      </div>
+
+      <div class="auth-panel-head">
+        <span class="panel-kicker" id="authEyebrow">Welcome back</span>
+        <h2 id="authTitle">Access your Opticus account</h2>
+        <p id="authSubtitle">Use your email and password once — we’ll open the right workspace for your account automatically.</p>
+      </div>
+
+      <div class="auth-demo-box">
+        <span class="panel-kicker">Demo accounts</span>
+        <div class="auth-demo-grid">
+          <div><strong>Client</strong><span>client@opticus.com / 123456</span></div>
+          <div><strong>Factory</strong><span>factory@opticus.com / 123456</span></div>
+          <div><strong>Staff</strong><span>staff@opticus.com / 123456</span></div>
+        </div>
+      </div>
+
+      <form id="loginForm" class="auth-form auth-form-active" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" placeholder="you@opticus.com" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+        </div>
+
+        <div class="error" id="loginError"></div>
+        <button class="btn-login" id="loginSubmit" type="submit">ENTER OPTICUS</button>
+      </form>
+
+      <form id="signupForm" class="auth-form" novalidate hidden>
+        <div class="field-grid">
+          <div class="field">
+            <label for="signupName">Full name</label>
+            <input id="signupName" type="text" placeholder="Your name" autocomplete="name" required>
+          </div>
+
+          <div class="field">
+            <label for="signupRole">Account type</label>
+            <select id="signupRole" class="control-select auth-select" required>
+              <option value="client">Client</option>
+              <option value="factory">Factory</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" type="email" placeholder="you@opticus.com" autocomplete="email" required>
+        </div>
+
+        <div class="field" id="factoryNameField" hidden>
+          <label for="signupFactoryName">Factory name</label>
+          <input id="signupFactoryName" type="text" placeholder="Ray-Ban Partner" autocomplete="organization">
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="signupPassword">Password</label>
+            <input id="signupPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" required>
+          </div>
+
+          <div class="field">
+            <label for="signupPasswordConfirm">Confirm password</label>
+            <input id="signupPasswordConfirm" type="password" placeholder="Repeat your password" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <div class="auth-note">
+          Client and factory accounts can be created here. Staff accounts remain internal.
+        </div>
+        <div class="error" id="signupError"></div>
+        <div class="success" id="signupSuccess"></div>
+        <button class="btn-login" id="signupSubmit" type="submit">CREATE ACCOUNT</button>
+      </form>
+
+      <div class="auth-footer-links">
+        <a href="index.html">Back to marketplace</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    initUnifiedAuthPage();
+  </script>
+  <script src="animations.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 const LS_USERS = "opticus_users";
 const LS_SESSION = "opticus_session";
 const LS_ORDERS = "opticus_orders";
+const AUTH_PAGE = "login_unified_professional.html";
 
 (function seedAuthData() {
   if (!localStorage.getItem(LS_USERS)) {
@@ -76,6 +77,19 @@ const LS_ORDERS = "opticus_orders";
 
     localStorage.setItem(LS_ORDERS, JSON.stringify(demoOrders));
   }
+
+  const users = getUsers();
+  if (!users.some((user) => user.email === "factory@opticus.com")) {
+    users.push({
+      id: "factory-demo",
+      name: "Factory Demo",
+      email: "factory@opticus.com",
+      password: "123456",
+      role: "factory",
+      factoryName: "Demo Factory"
+    });
+    setUsers(users);
+  }
 })();
 
 function getUsers() {
@@ -84,6 +98,10 @@ function getUsers() {
   } catch {
     return [];
   }
+}
+
+function setUsers(users) {
+  localStorage.setItem(LS_USERS, JSON.stringify(users));
 }
 
 function getOrders() {
@@ -145,7 +163,7 @@ function loginUser(email, password, expectedRole) {
     (u) =>
       u.email.toLowerCase() === String(email).trim().toLowerCase() &&
       u.password === password &&
-      u.role === expectedRole
+      (!expectedRole || u.role === expectedRole)
   );
 
   if (!user) return false;
@@ -161,16 +179,41 @@ function loginUser(email, password, expectedRole) {
   return true;
 }
 
+function createUser({ name, email, password, role, factoryName }) {
+  const users = getUsers();
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
+    return { ok: false, message: "An account with this email already exists." };
+  }
+
+  const user = {
+    id: `${role}-${Date.now()}`,
+    name: String(name).trim(),
+    email: normalizedEmail,
+    password,
+    role
+  };
+
+  if (role === "factory") {
+    user.factoryName = String(factoryName || name).trim();
+  }
+
+  users.push(user);
+  setUsers(users);
+  return { ok: true, user };
+}
+
 function logoutUser() {
   clearSession();
-  window.location.href = "login.html";
+  window.location.href = AUTH_PAGE;
 }
 
 function requireRole(allowedRoles) {
   const session = getSession();
 
   if (!session || !allowedRoles.includes(session.role)) {
-    window.location.href = "login.html";
+    window.location.href = AUTH_PAGE;
     return false;
   }
 
@@ -239,6 +282,132 @@ function initLoginForm(expectedRole) {
   });
 }
 
+function initUnifiedAuthPage() {
+  const tabs = Array.from(document.querySelectorAll("[data-auth-tab]"));
+  const loginForm = document.getElementById("loginForm");
+  const signupForm = document.getElementById("signupForm");
+  const authEyebrow = document.getElementById("authEyebrow");
+  const authTitle = document.getElementById("authTitle");
+  const authSubtitle = document.getElementById("authSubtitle");
+  const signupRole = document.getElementById("signupRole");
+  const factoryNameField = document.getElementById("factoryNameField");
+
+  const copy = {
+    login: {
+      eyebrow: "Welcome back",
+      title: "Access your Opticus account",
+      subtitle: "Use your email and password once - we'll open the right workspace for your account automatically."
+    },
+    signup: {
+      eyebrow: "Create account",
+      title: "Join Opticus",
+      subtitle: "Create a client or factory account and continue into the right workspace."
+    }
+  };
+
+  function setActiveTab(activeTab) {
+    tabs.forEach((tab) => {
+      const isActive = tab.dataset.authTab === activeTab;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+
+    loginForm?.classList.toggle("auth-form-active", activeTab === "login");
+    signupForm?.classList.toggle("auth-form-active", activeTab === "signup");
+    if (loginForm) loginForm.hidden = activeTab !== "login";
+    if (signupForm) signupForm.hidden = activeTab !== "signup";
+
+    const activeCopy = copy[activeTab];
+    if (authEyebrow) authEyebrow.textContent = activeCopy.eyebrow;
+    if (authTitle) authTitle.textContent = activeCopy.title;
+    if (authSubtitle) authSubtitle.textContent = activeCopy.subtitle;
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => setActiveTab(tab.dataset.authTab));
+  });
+
+  signupRole?.addEventListener("change", () => {
+    if (factoryNameField) factoryNameField.hidden = signupRole.value !== "factory";
+  });
+
+  loginForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("loginEmail")?.value || "";
+    const password = document.getElementById("loginPassword")?.value || "";
+    const error = document.getElementById("loginError");
+    const button = document.getElementById("loginSubmit");
+
+    if (error) error.textContent = "";
+    if (button) {
+      button.disabled = true;
+      button.dataset.defaultText = button.dataset.defaultText || button.textContent;
+      button.textContent = "ENTERING...";
+    }
+
+    window.setTimeout(() => {
+      const ok = loginUser(email, password);
+      const session = getSession();
+
+      if (!ok || !session) {
+        if (error) error.textContent = "Invalid email or password.";
+        if (button) {
+          button.disabled = false;
+          button.textContent = button.dataset.defaultText || "ENTER OPTICUS";
+        }
+        return;
+      }
+
+      goAfterLogin(session.role);
+    }, 220);
+  });
+
+  signupForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("signupName")?.value || "";
+    const role = document.getElementById("signupRole")?.value || "client";
+    const email = document.getElementById("signupEmail")?.value || "";
+    const factoryName = document.getElementById("signupFactoryName")?.value || "";
+    const password = document.getElementById("signupPassword")?.value || "";
+    const confirm = document.getElementById("signupPasswordConfirm")?.value || "";
+    const error = document.getElementById("signupError");
+    const success = document.getElementById("signupSuccess");
+
+    if (error) error.textContent = "";
+    if (success) success.textContent = "";
+
+    if (!String(name).trim() || !String(email).trim() || password.length < 6) {
+      if (error) error.textContent = "Fill all required fields. Password must have at least 6 characters.";
+      return;
+    }
+
+    if (password !== confirm) {
+      if (error) error.textContent = "Passwords do not match.";
+      return;
+    }
+
+    if (role === "factory" && !String(factoryName).trim()) {
+      if (error) error.textContent = "Factory name is required for factory accounts.";
+      return;
+    }
+
+    const result = createUser({ name, email, password, role, factoryName });
+
+    if (!result.ok) {
+      if (error) error.textContent = result.message;
+      return;
+    }
+
+    if (success) success.textContent = "Account created. Opening your workspace...";
+    loginUser(email, password, role);
+    window.setTimeout(() => goAfterLogin(role), 500);
+  });
+
+  setActiveTab("login");
+}
+
 function renderSessionBadge(containerId = "sessionArea") {
   const target = document.getElementById(containerId);
   if (!target) return;
@@ -246,7 +415,7 @@ function renderSessionBadge(containerId = "sessionArea") {
   const session = getSession();
 
   if (!session) {
-    target.innerHTML = `<a href="login.html" class="btn">LOGIN</a>`;
+    target.innerHTML = `<a href="${AUTH_PAGE}" class="btn">LOGIN</a>`;
     return;
   }
 

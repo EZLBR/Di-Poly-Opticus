@@ -1,0 +1,86 @@
+const LS_THEME = "opticus_theme";
+const LS_DESIGNS = "opticus_designs";
+const LS_ACTIVE = "opticus_active_design";
+
+(function initTheme() {
+  const saved = localStorage.getItem(LS_THEME);
+  if (saved === "dark") document.body.classList.add("dark");
+
+  const toggle = document.getElementById("darkToggle");
+  if (!toggle) return;
+
+  toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    document.body.classList.add("theme-switching");
+    window.setTimeout(() => document.body.classList.remove("theme-switching"), 400);
+    localStorage.setItem(
+      LS_THEME,
+      document.body.classList.contains("dark") ? "dark" : "light"
+    );
+  });
+})();
+
+function getDesigns() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_DESIGNS)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function setDesigns(designs) {
+  localStorage.setItem(LS_DESIGNS, JSON.stringify(designs));
+}
+
+function setActiveDesign(index) {
+  localStorage.setItem(LS_ACTIVE, String(index));
+}
+
+window.__OPTICUS__ = {
+  LS_THEME,
+  LS_DESIGNS,
+  LS_ACTIVE,
+  getDesigns,
+  setDesigns,
+  setActiveDesign
+};
+
+function renderSession() {
+  const session = JSON.parse(localStorage.getItem("opticus_session"));
+  const area = document.getElementById("sessionArea");
+
+  if (!area) return;
+
+  if (!session) {
+    area.innerHTML = `<a href="login_unified_professional.html">Login</a>`;
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="session-box">
+      <span>Welcome, ${session.name}</span>
+      ${session.role !== "client" ? `<a href="${session.role}-dashboard.html">Dashboard</a>` : ""}
+      <button onclick="logout()">Logout</button>
+    </div>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", renderSession);
+
+// Language selector initialization
+function updateLanguageSelector(lang) {
+  const selector = document.getElementById("languageSelector");
+  if (selector) {
+    selector.value = lang || getCurrentLanguage();
+  }
+}
+
+// Handle language change
+document.addEventListener("DOMContentLoaded", () => {
+  const selector = document.getElementById("languageSelector");
+  if (selector) {
+    selector.addEventListener("change", (e) => {
+      setLanguage(e.target.value);
+    });
+  }
+});
