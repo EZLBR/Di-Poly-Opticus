@@ -3467,25 +3467,26 @@ body.dark.page-marketplace .navbar .dark-toggle {
 
 /* Smooth Slide-in for the Glass Control Panel */
 @keyframes slideInRightStudio {
-  from { opacity: 0; transform: translateX(50px); }
+  from { opacity: 0; transform: translateX(80px); }
   to { opacity: 1; transform: translateX(0); }
 }
 body.page-create .controls-container {
-  animation: slideInRightStudio 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Added 0.4s delay so it waits for 3D load, and 'both' so it starts hidden */
+  animation: slideInRightStudio 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
 }
 
 @keyframes slideInLeftStudio {
-  from { opacity: 0; transform: translateX(-50px); }
+  from { opacity: 0; transform: translateX(-80px); }
   to { opacity: 1; transform: translateX(0); }
 }
 body.page-create .studio-left-panel,
 body.page-create .studio-top-left {
-  animation: slideInLeftStudio 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInLeftStudio 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
 }
 
 /* Magnetic Hover Effects on Buttons */
 .btn {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
 }
 .btn:hover {
   transform: translateY(-2px);
