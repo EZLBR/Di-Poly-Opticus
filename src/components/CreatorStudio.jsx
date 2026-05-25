@@ -1644,61 +1644,61 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
               )}
             </div>
 
-            {/* Viewport footer actions: Exporters & Saving */}
-            <div 
-              style={{
-                borderTop: "1px solid var(--glass-card-border)",
-                padding: "16px 20px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "12px"
-              }}
-            >
-              <div style={{ display: "flex", gap: "6px" }}>
-                <button 
-                  className="btn primary"
-                  onClick={() => setShowSaveModal(true)}
-                >
-                  <Check size={14} style={{ marginRight: "4px" }} />
-                  {language === "pt" ? "SALVAR PROJETO" : "SAVE DESIGN"}
-                </button>
-              </div>
-            </div>
-
-            {/* Smart Face Recognition Advice */}
-            {tryOnMode && aiSuggestions.length > 0 && (
+            {/* Viewport footer actions & Smart Face Recognition Advice */}
+            <div className="studio-left-panel">
               <div 
                 style={{
-                  background: "rgba(24, 59, 86, 0.08)",
-                  borderTop: "1px solid var(--glass-card-border)",
-                  padding: "16px 20px"
+                  padding: "16px 20px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "12px"
                 }}
               >
-                <span className="panel-kicker" style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--primary-accent)" }}>
-                  <Sparkles size={12} /> AI Styling Assistant
-                </span>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px", marginTop: "8px" }}>
-                  {aiSuggestions.map((s, idx) => (
-                    <div 
-                      key={idx} 
-                      style={{ 
-                        fontSize: "12px", 
-                        color: "var(--text-dark)", 
-                        opacity: 0.85,
-                        lineHeight: "1.4",
-                        display: "flex",
-                        gap: "6px"
-                      }}
-                    >
-                      <span style={{ color: "var(--primary-accent)" }}>•</span>
-                      <span>{s}</span>
-                    </div>
-                  ))}
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button 
+                    className="btn primary"
+                    onClick={() => setShowSaveModal(true)}
+                  >
+                    <Check size={14} style={{ marginRight: "4px" }} />
+                    {language === "pt" ? "SALVAR PROJETO" : "SAVE DESIGN"}
+                  </button>
                 </div>
               </div>
-            )}
+
+              {tryOnMode && aiSuggestions.length > 0 && (
+                <div 
+                  style={{
+                    background: "rgba(24, 59, 86, 0.08)",
+                    borderTop: "1px solid var(--glass-card-border)",
+                    padding: "16px 20px"
+                  }}
+                >
+                  <span className="panel-kicker" style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--primary-accent)" }}>
+                    <Sparkles size={12} /> AI Styling Assistant
+                  </span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px", marginTop: "8px" }}>
+                    {aiSuggestions.map((s, idx) => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          fontSize: "12px", 
+                          color: "var(--text-dark)", 
+                          opacity: 0.85,
+                          lineHeight: "1.4",
+                          display: "flex",
+                          gap: "6px"
+                        }}
+                      >
+                        <span style={{ color: "var(--primary-accent)" }}>•</span>
+                        <span>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT COLUMN: Control Panel (Step 1 or Step 2) */}

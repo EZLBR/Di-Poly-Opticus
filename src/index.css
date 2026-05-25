@@ -3137,3 +3137,129 @@ body.dark .premium-table tr:hover {
   opacity: 0.9;
 }
 
+/* --- PHASE 3: IMMERSIVE 3D STUDIO (FULL-SCREEN GLASSMORPHISM) --- */
+
+/* Reset the wrapper to occupy the entire screen without borders */
+body.page-create {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.page-create .page-wrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: none !important;
+  width: 100vw;
+  height: 100vh;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+body.page-create .creator {
+  display: block;
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 1. Fullscreen 3D Canvas (Explodes the box to the screen edges) */
+body.page-create #threeContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  z-index: 1;
+}
+
+/* 2. Glassmorphic Floating Navbar */
+body.page-create .navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+}
+
+body.page-create .navbar nav a, 
+body.page-create .navbar .logo, 
+body.page-create .navbar .btn,
+body.page-create .navbar .session-box span {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+body.page-create .navbar .dark-toggle {
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* 3. Floating Controls Panel (The 'Apple Vision Pro' Glass Panel) */
+body.page-create .controls-container {
+  position: absolute !important;
+  right: 40px !important;
+  top: 100px !important;
+  width: 380px !important;
+  max-height: calc(100vh - 140px) !important;
+  overflow-y: auto !important;
+  z-index: 40 !important;
+  background: var(--glass-card-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--glass-card-border) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.25) !important;
+  padding: 32px !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom minimal scrollbar for the floating panel */
+body.page-create .controls-container::-webkit-scrollbar {
+  width: 6px;
+}
+body.page-create .controls-container::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 10px;
+}
+
+/* Overwrite background colors of specific inner boxes to blend with glass */
+body.page-create .silhouette-card-hover {
+  background: rgba(150, 150, 150, 0.05) !important;
+}
+body.page-create .silhouette-card-hover:hover {
+  background: rgba(150, 150, 150, 0.1) !important;
+}
+
+/* Hide the old internal model buttons inside the 3D canvas */
+body.page-create .model-buttons {
+  display: none !important;
+}
+
+/* Position the left side tools (AI Advice / File loaded) floating on the left */
+body.page-create .studio-left-panel {
+  position: absolute;
+  left: 40px;
+  bottom: 40px;
+  z-index: 40;
+  width: 340px;
+  background: var(--glass-card-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--glass-card-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+  overflow: hidden;
+}
+
