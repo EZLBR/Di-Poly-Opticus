@@ -1480,30 +1480,29 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
             alignItems: "start"
           }}
         >
-          {/* LEFT COLUMN: Visualizer (3D scene or webcam try-on) */}
-          <div 
-            className="viewport-container premium-glass-card" 
-            style={{
-              position: "relative",
-              borderRadius: "12px",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column"
-            }}
-          >
-            {/* Stage Mode Tabs */}
+          {/* LEFT COLUMN: 3D Viewport & Webcam */}
+          <div className="viewport premium-glass-card" style={{ display: 'none' }}>
+            {/* The old viewport card is hidden because we moved the canvas and headers to absolute positioning */}
+          </div>
+
+          {/* Floating Top-Left Header for Canvas Mode toggle */}
+          <div className="studio-top-left" style={{ position: "absolute", top: "100px", left: "40px", zIndex: 40 }}>
             <div 
-              className="viewport-header" 
               style={{
-                borderBottom: "1px solid var(--glass-card-border)",
-                padding: "12px 20px",
+                background: "var(--glass-card-bg)",
+                backdropFilter: "blur(24px) saturate(180%)",
+                WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                border: "1px solid var(--glass-card-border)",
+                borderRadius: "16px",
+                padding: "12px 16px",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
+                gap: "12px",
+                alignItems: "center",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
               }}
             >
-              <span className="panel-kicker" style={{ margin: 0 }}>
-                {tryOnMode ? "Webcam Tracker" : "3D Preview Room"}
+              <span className="panel-kicker" style={{ margin: 0, color: "var(--text-dark)" }}>
+                {tryOnMode ? "WEBCAM TRACKER" : "3D PREVIEW ROOM"}
               </span>
 
               <div style={{ display: "flex", gap: "6px" }}>
@@ -1530,19 +1529,21 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                 </button>
               </div>
             </div>
+          </div>
 
-            {/* Rendering Canvas wrapper */}
-            <div 
-              style={{
-                width: "100%",
-                height: "500px",
-                position: "relative",
-                background: tryOnMode ? "#000" : "var(--bg-gray)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-            >
+          {/* Rendering Canvas wrapper - Now absolute and full screen */}
+          <div 
+            id="threeContainer"
+            style={{
+              width: "100vw",
+              height: "100vh",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              zIndex: 1,
+              background: tryOnMode ? "#000" : "transparent"
+            }}
+          >
               {/* Webcam Tracking Mode */}
               {tryOnMode && (
                 <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -1603,42 +1604,46 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                 <div 
                   style={{
                     position: "absolute",
-                    bottom: "20px",
-                    left: "20px",
+                    bottom: "40px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
                     display: "flex",
                     gap: "6px",
-                    background: "rgba(0,0,0,0.4)",
-                    backdropFilter: "blur(8px)",
-                    padding: "6px",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(255,255,255,0.08)"
+                    background: "var(--glass-card-bg)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    padding: "10px",
+                    borderRadius: "16px",
+                    border: "1px solid var(--glass-card-border)",
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+                    zIndex: 40
                   }}
                 >
                   <button 
                     onClick={() => setAutoRotate(!autoRotate)}
                     className={`btn ${autoRotate ? "primary" : ""}`}
-                    style={{ width: "32px", height: "32px", padding: 0, display: "flex", alignItems: "center", justify: "center" }}
+                    style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
                     title="Toggle auto-rotation"
                   >
-                    <RotateCw size={14} />
+                    <RotateCw size={16} />
                   </button>
                   <button 
                     onClick={() => {
                       cameraAngleRef.current.targetRadius = Math.max(4.6, cameraAngleRef.current.targetRadius - 0.8);
                     }}
                     className="btn"
-                    style={{ width: "32px", height: "32px", padding: 0 }}
+                    style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
                   >
-                    <ZoomIn size={14} />
+                    <ZoomIn size={16} />
                   </button>
                   <button 
                     onClick={() => {
                       cameraAngleRef.current.targetRadius = Math.min(13.2, cameraAngleRef.current.targetRadius + 0.8);
                     }}
                     className="btn"
-                    style={{ width: "32px", height: "32px", padding: 0 }}
+                    style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
                   >
-                    <ZoomOut size={14} />
+                    <ZoomOut size={16} />
                   </button>
                 </div>
               )}
