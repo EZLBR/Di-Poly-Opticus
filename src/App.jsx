@@ -3,7 +3,6 @@ import { useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import Marketplace from "./components/Marketplace";
 import CreatorStudio from "./components/CreatorStudio";
-import Importer from "./components/Importer";
 import AuthPage from "./components/AuthPage";
 import { FactoryDashboard, StaffDashboard } from "./components/Dashboards";
 import Cart from "./components/Cart";
@@ -52,7 +51,7 @@ function App() {
     document.body.classList.remove("page-marketplace", "page-create");
     if (view === "marketplace" || view === "login" || view === "factory-dashboard" || view === "staff-dashboard" || view === "cart") {
       document.body.classList.add("page-marketplace");
-    } else if (view === "create" || view === "import") {
+    } else if (view === "create") {
       document.body.classList.add("page-create");
     }
   }, [view]);
@@ -77,8 +76,6 @@ function App() {
         );
       case "create":
         return <CreatorStudio setView={setView} onOpenDesigns={handleOpenDesigns} />;
-      case "import":
-        return <Importer />;
       case "cart":
         return <Cart setView={setView} />;
       case "login":

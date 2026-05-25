@@ -52,13 +52,6 @@ export default function Navbar({ currentView, setView, onOpenDesigns }) {
             >
               {t("nav-studio")}
             </a>
-            <a
-              href="#"
-              className={currentView === "import" ? "active" : ""}
-              onClick={(e) => handleNavClick("import", e)}
-            >
-              {t("nav-import")}
-            </a>
             <a href="#" onClick={(e) => { e.preventDefault(); onOpenDesigns(); }}>
               {t("nav-my-designs")}
             </a>

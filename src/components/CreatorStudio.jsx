@@ -43,7 +43,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
   const [activeStep, setActiveStep] = useState(1); // 1 = Shape, 2 = Finish
 
   // --- Eyewear Customization State ---
-  const [model, setModel] = useState("round"); // round, square, hexagon
+  const [model, setModel] = useState("aviator"); // aviator, wayfarer, cateye
   const [color, setColor] = useState("#111827");
   const [isSunglasses, setIsSunglasses] = useState(false);
   const [antiReflective, setAntiReflective] = useState(true);
@@ -119,9 +119,9 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
   // --- Dimension presets per silhouette shape (Width, Lens size, Leg length, Thickness) ---
   // No longer customizable via sliders to honor user instructions
   const dimensionsMap = {
-    round: { frameWidth: 2.2, lensSize: 1.2, legLength: 2.8, thickness: 0.12, bridgeWidth: 0.5 },
-    square: { frameWidth: 2.35, lensSize: 1.18, legLength: 2.9, thickness: 0.14, bridgeWidth: 0.5 },
-    hexagon: { frameWidth: 2.1, lensSize: 1.1, legLength: 2.75, thickness: 0.14, bridgeWidth: 0.48 }
+    aviator: { frameWidth: 2.35, lensSize: 1.35, legLength: 2.8, thickness: 0.10, bridgeWidth: 0.45 },
+    wayfarer: { frameWidth: 2.25, lensSize: 1.20, legLength: 2.9, thickness: 0.16, bridgeWidth: 0.5 },
+    cateye: { frameWidth: 2.15, lensSize: 1.15, legLength: 2.75, thickness: 0.14, bridgeWidth: 0.48 }
   };
 
   const currentDims = dimensionsMap[model];
@@ -154,10 +154,10 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       }
     } else if (activeProductId) {
       const baseProductsMap = {
-        "base-round-metal": { model: "round", color: "#6b7280", isSunglasses: false, templeStyle: "classic", topBar: false, bridgeStyle: "soft", frameProfile: "medium" },
-        "base-square-acetate": { model: "square", color: "#111827", isSunglasses: false, templeStyle: "classic", topBar: true, bridgeStyle: "soft", frameProfile: "medium" },
-        "base-round-acetate": { model: "round", color: "#1f2937", isSunglasses: false, templeStyle: "classic", topBar: false, bridgeStyle: "soft", frameProfile: "medium" },
-        "base-square-metal": { model: "square", color: "#9ca3af", isSunglasses: true, templeStyle: "classic", topBar: true, bridgeStyle: "soft", frameProfile: "medium" }
+        "base-round-metal": { model: "aviator", color: "#6b7280", isSunglasses: true, templeStyle: "straight", topBar: true, bridgeStyle: "soft", frameProfile: "thin" },
+        "base-square-acetate": { model: "wayfarer", color: "#111827", isSunglasses: false, templeStyle: "classic", topBar: false, bridgeStyle: "soft", frameProfile: "medium" },
+        "base-round-acetate": { model: "cateye", color: "#1f2937", isSunglasses: false, templeStyle: "classic", topBar: false, bridgeStyle: "soft", frameProfile: "medium" },
+        "base-square-metal": { model: "wayfarer", color: "#9ca3af", isSunglasses: true, templeStyle: "classic", topBar: false, bridgeStyle: "soft", frameProfile: "medium" }
       };
       if (baseProductsMap[activeProductId]) {
         loadedConfig = baseProductsMap[activeProductId];
@@ -486,31 +486,32 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     // Material Definitions
     const frameMaterial = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(color),
-      metalness: isSunglasses ? 0.42 : 0.24,
-      roughness: isSunglasses ? 0.16 : 0.28,
-      clearcoat: 1,
-      clearcoatRoughness: 0.025,
-      reflectivity: 1,
-      envMapIntensity: 1.7,
-      sheen: 0.22,
-      sheenRoughness: 0.22,
-      emissive: new THREE.Color(color).multiplyScalar(0.03),
+      metalness: isSunglasses ? 0.8 : 0.15,
+      roughness: isSunglasses ? 0.12 : 0.18,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.04,
+      reflectivity: 1.0,
+      envMapIntensity: 2.0,
+      sheen: 0.3,
+      sheenRoughness: 0.2,
+      emissive: new THREE.Color(color).multiplyScalar(0.02),
     });
 
     const lensMaterial = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(isSunglasses ? "#151b26" : "#dbeafe"),
-      metalness: 0,
-      roughness: antiReflective ? 0.004 : 0.035,
-      transmission: isSunglasses ? 0.12 : 0.94,
-      thickness: isSunglasses ? 0.38 : 0.62,
-      ior: 1.52,
+      color: new THREE.Color(isSunglasses ? "#0a0a0a" : "#e6f2ff"),
+      metalness: isSunglasses ? 0.2 : 0.0,
+      roughness: antiReflective ? 0.0 : 0.05,
+      transmission: isSunglasses ? 0.2 : 0.98,
+      thickness: isSunglasses ? 0.4 : 0.7,
+      ior: 1.6, // High index lens distortion
+      dispersion: 2.5, // Chromatic aberration on edges
       transparent: true,
-      opacity: isSunglasses ? 0.88 : 0.36,
-      clearcoat: 1,
-      clearcoatRoughness: 0.008,
-      attenuationDistance: isSunglasses ? 0.8 : 1.9,
-      attenuationColor: new THREE.Color(isSunglasses ? "#0f172a" : "#cfe7ff"),
-      envMapIntensity: 1.45
+      opacity: 1.0, // Let transmission handle visibility
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.0,
+      attenuationDistance: isSunglasses ? 0.5 : 2.5,
+      attenuationColor: new THREE.Color(isSunglasses ? "#000000" : "#ffffff"),
+      envMapIntensity: 3.0 // Stronger reflections on the glass
     });
 
     const padMaterial = new THREE.MeshPhysicalMaterial({
@@ -557,33 +558,47 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       path.quadraticCurveTo(x, y, x + r, y);
     };
 
-    const getLensShape = (type, sizeX, sizeY) => {
+    const getLensShape = (type, sizeX, sizeY, isLeft = false) => {
       const shape = new THREE.Shape();
-      if (type === "round") {
-        shape.absellipse(0, 0, sizeX, sizeY, 0, Math.PI * 2, false, 0);
-        return shape;
+      
+      if (type === "aviator") {
+        shape.moveTo(0, sizeY * 0.8);
+        shape.bezierCurveTo(sizeX * 0.4, sizeY * 0.85, sizeX * 0.95, sizeY * 0.4, sizeX * 0.95, -sizeY * 0.1);
+        shape.bezierCurveTo(sizeX * 0.95, -sizeY * 0.7, sizeX * 0.4, -sizeY, 0, -sizeY);
+        shape.bezierCurveTo(-sizeX * 0.4, -sizeY, -sizeX * 0.8, -sizeY * 0.6, -sizeX * 0.8, 0);
+        shape.bezierCurveTo(-sizeX * 0.8, sizeY * 0.5, -sizeX * 0.4, sizeY * 0.75, 0, sizeY * 0.8);
+      } 
+      else if (type === "wayfarer") {
+        shape.moveTo(-sizeX * 0.8, sizeY * 0.7);
+        shape.lineTo(sizeX * 0.7, sizeY * 0.85); 
+        shape.bezierCurveTo(sizeX * 0.95, sizeY * 0.9, sizeX, sizeY * 0.6, sizeX * 0.95, sizeY * 0.3);
+        shape.lineTo(sizeX * 0.7, -sizeY * 0.7);
+        shape.bezierCurveTo(sizeX * 0.65, -sizeY * 0.95, sizeX * 0.3, -sizeY, 0, -sizeY);
+        shape.bezierCurveTo(-sizeX * 0.4, -sizeY, -sizeX * 0.65, -sizeY * 0.85, -sizeX * 0.7, -sizeY * 0.6);
+        shape.lineTo(-sizeX * 0.9, sizeY * 0.3);
+        shape.bezierCurveTo(-sizeX * 0.95, sizeY * 0.5, -sizeX * 0.9, sizeY * 0.65, -sizeX * 0.8, sizeY * 0.7);
+      } 
+      else if (type === "cateye") {
+        shape.moveTo(-sizeX * 0.7, sizeY * 0.5);
+        shape.bezierCurveTo(-sizeX * 0.3, sizeY * 0.6, sizeX * 0.2, sizeY * 0.7, sizeX * 1.05, sizeY * 1.05); 
+        shape.bezierCurveTo(sizeX, sizeY * 0.8, sizeX * 0.9, sizeY * 0.3, sizeX * 0.8, 0);
+        shape.bezierCurveTo(sizeX * 0.6, -sizeY * 0.8, sizeX * 0.3, -sizeY, -sizeX * 0.2, -sizeY);
+        shape.bezierCurveTo(-sizeX * 0.6, -sizeY, -sizeX * 0.8, -sizeY * 0.6, -sizeX * 0.8, 0);
+        shape.bezierCurveTo(-sizeX * 0.8, sizeY * 0.3, -sizeX * 0.75, sizeY * 0.4, -sizeX * 0.7, sizeY * 0.5);
       }
-      if (type === "hexagon") {
-        const rx = sizeX;
-        const ry = sizeY;
-        const pts = [
-          new THREE.Vector2(-rx * 0.55, -ry),
-          new THREE.Vector2( rx * 0.55, -ry),
-          new THREE.Vector2( rx,         -ry * 0.15),
-          new THREE.Vector2( rx * 0.72,   ry),
-          new THREE.Vector2(-rx * 0.72,   ry),
-          new THREE.Vector2(-rx,         -ry * 0.15)
-        ];
-        shape.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) {
-          shape.lineTo(pts[i].x, pts[i].y);
+
+      if (isLeft) {
+        const points = shape.getPoints(24);
+        const mirroredShape = new THREE.Shape();
+        const mirroredPoints = points.map(p => new THREE.Vector2(-p.x, p.y)).reverse();
+        
+        mirroredShape.moveTo(mirroredPoints[0].x, mirroredPoints[0].y);
+        for (let i = 1; i < mirroredPoints.length; i++) {
+          mirroredShape.lineTo(mirroredPoints[i].x, mirroredPoints[i].y);
         }
-        shape.closePath();
-        return shape;
+        return mirroredShape;
       }
-      // Square with soft corners
-      const r = Math.min(sizeX, sizeY) * 0.28;
-      roundedRect(shape, -sizeX, -sizeY, sizeX * 2, sizeY * 2, r);
+
       return shape;
     };
 
@@ -592,17 +607,8 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     const lensDepth = 0.06;
     const widthScale = Math.max(0.72, Math.min(1.45, currentDims.frameWidth / 2.2));
 
-    let lensX, lensY;
-    if (model === "round") {
-      lensX = currentDims.lensSize * 1.0 * widthScale;
-      lensY = currentDims.lensSize * 0.92;
-    } else if (model === "hexagon") {
-      lensX = currentDims.lensSize * 1.02 * widthScale;
-      lensY = currentDims.lensSize * 0.88;
-    } else {
-      lensX = currentDims.lensSize * 1.06 * widthScale;
-      lensY = currentDims.lensSize * 0.86;
-    }
+    let lensX = currentDims.lensSize * widthScale;
+    let lensY = currentDims.lensSize * 0.90;
 
     // Dynamic frame multiplier (Thin, Medium, Bold)
     let thicknessMul = 1.0, topBarMul = 1.0, bridgeMul = 1.0;
@@ -628,49 +634,75 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     rootGroup.add(frontGroup);
     frontGroupRef.current = frontGroup;
 
-    // Geometries
-    const outerShape = getLensShape(model, outerX, outerY);
-    const innerShape = getLensShape(model, lensX, lensY);
-    outerShape.holes.push(innerShape);
+    // Geometries Right
+    const outerShapeRight = getLensShape(model, outerX, outerY, false);
+    const innerShapeRight = getLensShape(model, lensX, lensY, false);
+    outerShapeRight.holes.push(innerShapeRight);
 
-    const rimGeo = new THREE.ExtrudeGeometry(outerShape, {
+    const rimGeoRight = new THREE.ExtrudeGeometry(outerShapeRight, {
       depth: adjustedFrameDepth,
       bevelEnabled: true,
       bevelThickness: adjustedFrameDepth * 0.18,
       bevelSize: adjustedFrameDepth * 0.18,
       bevelSegments: 3,
-      curveSegments: model === "round" ? 48 : 24
+      curveSegments: 24
     });
-    rimGeo.center();
+    rimGeoRight.center();
 
-    const lensShapeOnly = getLensShape(model, lensX, lensY);
-    const lensGeo = new THREE.ExtrudeGeometry(lensShapeOnly, {
+    const lensShapeRight = getLensShape(model, lensX, lensY, false);
+    const lensGeoRight = new THREE.ExtrudeGeometry(lensShapeRight, {
       depth: lensDepth,
       bevelEnabled: true,
       bevelThickness: lensDepth * 0.08,
       bevelSize: lensDepth * 0.08,
       bevelSegments: 2,
-      curveSegments: model === "round" ? 48 : 24
+      curveSegments: 24
     });
-    lensGeo.center();
+    lensGeoRight.center();
+
+    // Geometries Left
+    const outerShapeLeft = getLensShape(model, outerX, outerY, true);
+    const innerShapeLeft = getLensShape(model, lensX, lensY, true);
+    outerShapeLeft.holes.push(innerShapeLeft);
+
+    const rimGeoLeft = new THREE.ExtrudeGeometry(outerShapeLeft, {
+      depth: adjustedFrameDepth,
+      bevelEnabled: true,
+      bevelThickness: adjustedFrameDepth * 0.18,
+      bevelSize: adjustedFrameDepth * 0.18,
+      bevelSegments: 3,
+      curveSegments: 24
+    });
+    rimGeoLeft.center();
+
+    const lensShapeLeft = getLensShape(model, lensX, lensY, true);
+    const lensGeoLeft = new THREE.ExtrudeGeometry(lensShapeLeft, {
+      depth: lensDepth,
+      bevelEnabled: true,
+      bevelThickness: lensDepth * 0.08,
+      bevelSize: lensDepth * 0.08,
+      bevelSegments: 2,
+      curveSegments: 24
+    });
+    lensGeoLeft.center();
 
     // Add Rims & Lenses
-    const rightRimMesh = new THREE.Mesh(rimGeo, frameMaterial);
+    const rightRimMesh = new THREE.Mesh(rimGeoRight, frameMaterial);
     rightRimMesh.position.set(lensOffsetX, 0, 0);
     rightRimMesh.castShadow = true;
     frontGroup.add(rightRimMesh);
 
-    const leftRimMesh = new THREE.Mesh(rimGeo, frameMaterial);
+    const leftRimMesh = new THREE.Mesh(rimGeoLeft, frameMaterial);
     leftRimMesh.position.set(-lensOffsetX, 0, 0);
     leftRimMesh.castShadow = true;
     frontGroup.add(leftRimMesh);
 
-    const rightLensMesh = new THREE.Mesh(lensGeo, lensMaterial);
+    const rightLensMesh = new THREE.Mesh(lensGeoRight, lensMaterial);
     rightLensMesh.position.set(lensOffsetX, 0, adjustedFrameDepth * 0.12);
     rightLensMesh.castShadow = true;
     frontGroup.add(rightLensMesh);
 
-    const leftLensMesh = new THREE.Mesh(lensGeo, lensMaterial);
+    const leftLensMesh = new THREE.Mesh(lensGeoLeft, lensMaterial);
     leftLensMesh.position.set(-lensOffsetX, 0, adjustedFrameDepth * 0.12);
     leftLensMesh.castShadow = true;
     frontGroup.add(leftLensMesh);
@@ -1810,19 +1842,19 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                     }}
                   >
                     {[
-                      { id: "round", title: t("btn-round"), desc: "Timeless circle balance", svg: (
-                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4" }}>
-                          <circle cx="50" cy="50" r="36" />
+                      { id: "aviator", title: "Aviator", desc: "The legendary pilot silhouette", svg: (
+                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4", strokeLinecap: "round" }}>
+                          <path d="M 50 15 C 80 15, 90 40, 90 65 C 90 85, 75 90, 50 90 C 25 90, 10 85, 10 65 C 10 40, 20 15, 50 15 Z" />
                         </svg>
                       )},
-                      { id: "square", title: t("btn-square"), desc: "Sharp structure and attitude", svg: (
-                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4" }}>
-                          <rect x="14" y="14" width="72" height="72" rx="8" />
+                      { id: "wayfarer", title: "Wayfarer", desc: "Bold cinematic structure", svg: (
+                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4", strokeLinejoin: "round" }}>
+                          <path d="M 15 25 L 85 25 C 90 25, 95 30, 95 40 L 80 85 C 75 90, 60 90, 50 90 C 40 90, 25 90, 20 85 L 5 40 C 5 30, 10 25, 15 25 Z" />
                         </svg>
                       )},
-                      { id: "hexagon", title: t("btn-hexagon"), desc: "Futuristic angular profile", svg: (
-                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4" }}>
-                          <polygon points="50,12 84,31 84,69 50,88 16,69 16,31" />
+                      { id: "cateye", title: "Cat-Eye", desc: "Elegant feminine swoop", svg: (
+                        <svg viewBox="0 0 100 100" style={{ width: "38px", height: "38px", fill: "none", stroke: "currentColor", strokeWidth: "4", strokeLinejoin: "round" }}>
+                          <path d="M 25 35 C 40 25, 60 25, 75 35 C 85 40, 95 20, 95 20 C 95 20, 95 60, 85 80 C 75 90, 50 95, 50 95 C 50 95, 25 90, 15 80 C 5 60, 5 20, 5 20 C 5 20, 15 40, 25 35 Z" />
                         </svg>
                       )}
                     ].map((item) => {
