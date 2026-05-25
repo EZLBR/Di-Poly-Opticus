@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { 
@@ -1217,101 +1215,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     setAiSuggestions(list);
   }
 
-  // --- 8. Model Exporter Actions ---
-  function cloneForExport() {
-    const root = glassesGroupRef.current;
-    if (!root) return null;
-
-    // Deep clone scene graph for isolated exports
-    const exportRoot = root.clone();
-    exportRoot.rotation.set(0, 0, 0);
-    exportRoot.position.set(0, 0, 0);
-    exportRoot.scale.set(1, 1, 1);
-
-    // Reset folding temples to default straight stance for fabrication export
-    exportRoot.traverse((child) => {
-      if (child.isGroup && child !== exportRoot) {
-        child.rotation.set(0, 0, 0);
-        child.position.set(0, 0, 0);
-      }
-    });
-
-    return exportRoot;
-  }
-
-  const exportModelFile = (format) => {
-    const exportNode = cloneForExport();
-    if (!exportNode) {
-      showToast(language === "pt" ? "Nada para exportar ainda" : "Nothing to export yet.");
-      return;
-    }
-
-    const baseName = designName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "opticus-design";
-
-    const downloadText = (content, ext, mime) => {
-      const blob = new Blob([content], { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${baseName}.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast(`${ext.toUpperCase()} Exported!`);
-    };
-
-    try {
-      if (format === "stl") {
-        const exporter = new STLExporter();
-        const result = exporter.parse(exportNode);
-        downloadText(result, "stl", "model/stl");
-      } else if (format === "obj") {
-        const exporter = new OBJExporter();
-        const result = exporter.parse(exportNode);
-        downloadText(result, "obj", "text/plain");
-      } else if (format === "glb") {
-        const exporter = new GLTFExporter();
-        exporter.parse(
-          exportNode,
-          (result) => {
-            const blob = new Blob([result], { type: "model/gltf-binary" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${baseName}.glb`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("GLB Exported!");
-          },
-          (err) => {
-            console.error(err);
-            showToast("Failed to parse GLB.");
-          },
-          { binary: true }
-        );
-      } else if (format === "gltf") {
-        const exporter = new GLTFExporter();
-        exporter.parse(
-          exportNode,
-          (result) => {
-            const json = JSON.stringify(result, null, 2);
-            downloadText(json, "gltf", "model/gltf+json");
-          },
-          (err) => {
-            console.error(err);
-            showToast("Failed to parse GLTF.");
-          },
-          { binary: false }
-        );
-      }
-    } catch (error) {
-      console.error(error);
-      showToast(`Export failed: ${format.toUpperCase()}`);
-    }
-  };
+  // Exporter Actions removed.
 
   // --- 9. LocalStorage Custom Design Storage ---
   const saveDesignPayload = async (e) => {

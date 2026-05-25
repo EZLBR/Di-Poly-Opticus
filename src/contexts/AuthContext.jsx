@@ -26,6 +26,49 @@ export function AuthProvider({ children }) {
     localStorage.setItem("opticus_cart", JSON.stringify(cart));
   }, [cart]);
 
+  const fetchBackendUsers = async (token) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUsers(data.users);
+      }
+    } catch (e) {
+      console.error("Failed to load backend users:", e);
+    }
+  };
+
+  const fetchBackendOrders = async (token) => {
+    try {
+      const res = await fetch(`${API_URL}/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrders(data.orders);
+      }
+    } catch (e) {
+      console.error("Failed to load backend orders:", e);
+    }
+  };
+
+  const fetchBackendDesigns = async (token) => {
+    try {
+      const res = await fetch(`${API_URL}/designs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDesigns(data.designs);
+        localStorage.setItem("opticus_designs", JSON.stringify(data.designs));
+      }
+    } catch (e) {
+      console.error("Failed to load backend designs:", e);
+    }
+  };
+
   // Initialize and load session/data
   useEffect(() => {
     async function initSession() {
@@ -46,6 +89,7 @@ export function AuthProvider({ children }) {
             return;
           }
         } catch (e) {
+          console.error(e);
           console.log("[Opticus] Backend server offline. Using local session fallback.");
         }
       }
@@ -76,49 +120,7 @@ export function AuthProvider({ children }) {
     initSession();
   }, []);
 
-  const fetchBackendUsers = async (token) => {
-    try {
-      const res = await fetch(`${API_URL}/auth/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setUsers(data.users);
-      }
-    } catch (e) {
-      console.error("Failed to load backend users:", e);
-    }
-  };
 
-  // Fetch backend orders helper
-  const fetchBackendOrders = async (token) => {
-    try {
-      const res = await fetch(`${API_URL}/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setOrders(data.orders);
-      }
-    } catch (e) {
-      console.error("Failed to load backend orders:", e);
-    }
-  };
-
-  const fetchBackendDesigns = async (token) => {
-    try {
-      const res = await fetch(`${API_URL}/designs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setDesigns(data.designs);
-        localStorage.setItem("opticus_designs", JSON.stringify(data.designs));
-      }
-    } catch (e) {
-      console.error("Failed to load backend designs:", e);
-    }
-  };
 
   const login = async (email, password) => {
     try {
@@ -141,6 +143,7 @@ export function AuthProvider({ children }) {
         return { ok: false, message: data.error || "Login failed." };
       }
     } catch (err) {
+      console.error(err);
       console.log("[Opticus] Backend offline. Falling back to local authentication.");
       // 2. Fallback to localStorage simulation
       const localUsers = JSON.parse(localStorage.getItem(LS_USERS)) || [];
@@ -195,6 +198,7 @@ export function AuthProvider({ children }) {
         return { ok: false, message: data.error || "Signup failed." };
       }
     } catch (err) {
+      console.error(err);
       console.log("[Opticus] Backend offline. Falling back to local signup registration.");
       // 2. Fallback to localStorage simulation
       const localUsers = JSON.parse(localStorage.getItem(LS_USERS)) || [];
