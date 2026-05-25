@@ -124,7 +124,9 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     cateye: { frameWidth: 2.15, lensSize: 1.15, legLength: 2.75, thickness: 0.14, bridgeWidth: 0.48 }
   };
 
-  const currentDims = dimensionsMap[model];
+  // Fallback to aviator if the model from localStorage is an old shape (round, square, etc)
+  const currentDims = dimensionsMap[model] || dimensionsMap["aviator"];
+  const safeModel = dimensionsMap[model] ? model : "aviator";
 
   // Helper function for status toaster
   const showToast = (msg) => {
@@ -635,8 +637,8 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     frontGroupRef.current = frontGroup;
 
     // Geometries Right
-    const outerShapeRight = getLensShape(model, outerX, outerY, false);
-    const innerShapeRight = getLensShape(model, lensX, lensY, false);
+    const outerShapeRight = getLensShape(safeModel, outerX, outerY, false);
+    const innerShapeRight = getLensShape(safeModel, lensX, lensY, false);
     outerShapeRight.holes.push(innerShapeRight);
 
     const rimGeoRight = new THREE.ExtrudeGeometry(outerShapeRight, {
@@ -649,7 +651,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     });
     rimGeoRight.center();
 
-    const lensShapeRight = getLensShape(model, lensX, lensY, false);
+    const lensShapeRight = getLensShape(safeModel, lensX, lensY, false);
     const lensGeoRight = new THREE.ExtrudeGeometry(lensShapeRight, {
       depth: lensDepth,
       bevelEnabled: true,
@@ -661,8 +663,8 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     lensGeoRight.center();
 
     // Geometries Left
-    const outerShapeLeft = getLensShape(model, outerX, outerY, true);
-    const innerShapeLeft = getLensShape(model, lensX, lensY, true);
+    const outerShapeLeft = getLensShape(safeModel, outerX, outerY, true);
+    const innerShapeLeft = getLensShape(safeModel, lensX, lensY, true);
     outerShapeLeft.holes.push(innerShapeLeft);
 
     const rimGeoLeft = new THREE.ExtrudeGeometry(outerShapeLeft, {
@@ -675,7 +677,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     });
     rimGeoLeft.center();
 
-    const lensShapeLeft = getLensShape(model, lensX, lensY, true);
+    const lensShapeLeft = getLensShape(safeModel, lensX, lensY, true);
     const lensGeoLeft = new THREE.ExtrudeGeometry(lensShapeLeft, {
       depth: lensDepth,
       bevelEnabled: true,
