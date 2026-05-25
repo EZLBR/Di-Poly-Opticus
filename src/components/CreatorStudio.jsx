@@ -1704,7 +1704,6 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                 </div>
               )}
             </div>
-          </div>
 
           {/* RIGHT COLUMN: Control Panel (Step 1 or Step 2) */}
           <div 
