@@ -3463,3 +3463,76 @@ body.dark.page-marketplace .navbar .dark-toggle {
   border-color: rgba(255,255,255,0.2) !important;
 }
 
+/* --- PHASE 4: MICRO-ANIMATIONS & SENSORY POLISH --- */
+
+/* Smooth Slide-in for the Glass Control Panel */
+@keyframes slideInRightStudio {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+body.page-create .controls-container {
+  animation: slideInRightStudio 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInLeftStudio {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+body.page-create .studio-left-panel,
+body.page-create .studio-top-left {
+  animation: slideInLeftStudio 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Magnetic Hover Effects on Buttons */
+.btn {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+}
+.btn.primary:hover {
+  box-shadow: 0 10px 24px rgba(24, 59, 86, 0.3) !important;
+}
+body.dark .btn.primary:hover {
+  box-shadow: 0 10px 24px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Organic Pulse for the Save Design Button */
+@keyframes subtlePulse {
+  0% { box-shadow: 0 0 0 0 rgba(24, 59, 86, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(24, 59, 86, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(24, 59, 86, 0); }
+}
+body.dark @keyframes subtlePulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+body.page-create .studio-left-panel .btn.primary {
+  animation: subtlePulse 3s infinite;
+}
+
+/* Living Cards - Scale & Glow for selections */
+.silhouette-card-hover {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  transform-origin: center;
+}
+.silhouette-card-hover:hover {
+  transform: scale(1.02);
+  border-color: var(--primary-accent) !important;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
+}
+
+/* Glass Inputs focus aura */
+input.premium-input:focus, 
+select.premium-select:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(24, 59, 86, 0.1) !important;
+  border-color: var(--primary-accent) !important;
+}
+body.dark input.premium-input:focus, 
+body.dark select.premium-select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+}
+
