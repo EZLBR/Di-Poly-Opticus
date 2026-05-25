@@ -1761,17 +1761,6 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                   {language === "pt" ? "SALVAR PROJETO" : "SAVE DESIGN"}
                 </button>
               </div>
-
-              {/* Exporters dropdown */}
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: "var(--color-hint)", fontWeight: "600", textTransform: "uppercase" }}>
-                  Export 3D:
-                </span>
-                <button onClick={() => exportModelFile("stl")} className="btn" style={{ padding: "0 10px", height: "28px", fontSize: "11px" }}>STL</button>
-                <button onClick={() => exportModelFile("obj")} className="btn" style={{ padding: "0 10px", height: "28px", fontSize: "11px" }}>OBJ</button>
-                <button onClick={() => exportModelFile("gltf")} className="btn" style={{ padding: "0 10px", height: "28px", fontSize: "11px" }}>GLTF</button>
-                <button onClick={() => exportModelFile("glb")} className="btn" style={{ padding: "0 10px", height: "28px", fontSize: "11px" }}>GLB</button>
-              </div>
             </div>
 
             {/* Smart Face Recognition Advice */}
