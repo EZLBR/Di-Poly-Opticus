@@ -3445,3 +3445,21 @@ body.dark.page-marketplace .product-card {
   border-color: rgba(255,255,255,0.08) !important;
 }
 
+/* Fix Navbar Contrast in Dark Mode */
+body.dark.page-marketplace .navbar nav a,
+body.dark.page-marketplace .logo,
+body.dark.page-marketplace .session-box span {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+body.dark.page-marketplace .navbar nav a:hover,
+body.dark.page-marketplace .navbar nav a.active {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+body.dark.page-marketplace .navbar .dark-toggle {
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.2) !important;
+}
+
