@@ -2,7 +2,13 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .logo {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* CSS Custom Properties for Theming */
