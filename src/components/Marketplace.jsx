@@ -205,7 +205,7 @@ function ThreePreview({ shape, material }) {
   return <div ref={containerRef} className="card-preview three-preview" style={{ height: "150px" }} />;
 }
 
-export default function Marketplace({ setView, showDesignsModal, onCloseDesignsModal }) {
+export default function Marketplace({ setView }) {
   const { session, addToCart, cart } = useAuth();
   const { t, language } = useTranslation();
   const [toastMessage, setToastMessage] = useState("");
@@ -217,26 +217,6 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
       return [];
     }
   });
-
-  const [savedDesigns, setSavedDesigns] = useState(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem("opticus_designs"));
-      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    if (showDesignsModal) {
-      try {
-        const list = JSON.parse(localStorage.getItem("opticus_designs"));
-        setSavedDesigns(Array.isArray(list) ? list.filter(Boolean) : []);
-      } catch (e) {
-        console.error("Failed to load saved designs:", e);
-      }
-    }
-  }, [showDesignsModal]);
 
   // Base Products
   const baseProducts = [
@@ -290,26 +270,9 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
     );
   };
 
-  const getPublishedDesigns = () => {
-    return savedDesigns
-      .map((d, i) => ({ ...d, savedIndex: i }))
-      .filter((d) => d.published)
-      .map((d) => ({
-        id: `design-${d.savedIndex}`,
-        type: "saved",
-        savedIndex: d.savedIndex,
-        name: d.name || `Design #${d.savedIndex + 1}`,
-        shape: d.model === "square" ? "square" : "round",
-        material: d.isSunglasses ? "metal" : "acetate",
-        price: d.isSunglasses ? 220 : 180,
-        badge: "Community"
-      }));
-  };
-
   const getAllProducts = () => {
     const base = baseProducts.map((p) => ({ ...p, type: "base" }));
-    const saved = getPublishedDesigns();
-    return [...base, ...saved];
+    return [...base];
   };
 
   const handleClearFilters = () => {
@@ -389,71 +352,7 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
     setView("create");
   };
 
-  const handleOpenSavedDesign = (index) => {
-    localStorage.setItem("opticus_active_design", String(index));
-    localStorage.removeItem("opticus_active_product");
-    onCloseDesignsModal();
-    setView("create");
-  };
 
-  const handleDeleteSavedDesign = (index) => {
-    const next = savedDesigns.filter((_, idx) => idx !== index);
-    localStorage.setItem("opticus_designs", JSON.stringify(next));
-    setSavedDesigns(next);
-
-    const activeIndex = localStorage.getItem("opticus_active_design");
-    if (activeIndex !== null && Number(activeIndex) === index) {
-      localStorage.removeItem("opticus_active_design");
-    }
-  };
-
-  const handleTogglePublishDesign = (index) => {
-    const next = savedDesigns.map((d, idx) => {
-      if (idx === index) {
-        return { ...d, published: !d.published };
-      }
-      return d;
-    });
-    localStorage.setItem("opticus_designs", JSON.stringify(next));
-    setSavedDesigns(next);
-  };
-
-  const handleAddToCart = (index) => {
-    const design = savedDesigns[index];
-    if (!design) return;
-
-    // Calculate premium price matching CreatorStudio logic
-    let price = 180;
-    if (design.isSunglasses) price += 40;
-    if (design.frameProfile === "bold") price += 20;
-    if (design.antiReflective) price += 15;
-
-    const cartItem = {
-      id: design.id || `design-${index}-${Date.now()}`,
-      productName: design.name || `Design #${index + 1}`,
-      factoryId: "factory-demo",
-      factoryName: "Demo Factory",
-      total: price,
-      customSpecs: {
-        model: design.model || "round",
-        color: design.color || "#000000",
-        profile: design.frameProfile || "standard",
-        templeStyle: design.templeStyle || "standard",
-        bridgeStyle: design.bridgeStyle || "standard",
-        isSunglasses: !!design.isSunglasses,
-        antiReflective: !!design.antiReflective,
-        prescriptionUploaded: !!design.prescriptionFileName
-      }
-    };
-
-    addToCart(cartItem);
-    
-    // Show toast message
-    setToastMessage(t("cart-item-added"));
-    setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
-  };
 
   const filteredList = getFilteredProducts();
 
@@ -470,10 +369,7 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
                 <Sparkles size={16} style={{ marginRight: "6px", verticalAlign: "middle" }} />
                 {t("btn-start-studio")}
               </button>
-              <button className="btn hero-btn" onClick={() => {
-                const modal = document.getElementById("designsModal");
-                if (modal) modal.classList.add("open");
-              }}>
+              <button className="btn hero-btn" onClick={() => setView("designs")}>
                 <FolderHeart size={16} style={{ marginRight: "6px", verticalAlign: "middle" }} />
                 {t("btn-open-saved")}
               </button>
@@ -698,54 +594,7 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
         </footer>
       </div>
 
-      {/* Designs Modal */}
-      <div className={`modal ${showDesignsModal ? "open" : ""}`} id="designsModal" aria-hidden={!showDesignsModal}>
-        <div className="modal-card">
-          <div className="modal-head">
-            <h3>MY DESIGNS</h3>
-            <button className="modal-close" onClick={onCloseDesignsModal} aria-label="Close">
-              <X size={18} />
-            </button>
-          </div>
-          <div className="modal-body" id="designsList">
-            {savedDesigns.length === 0 ? (
-              <p className="hint">No saved designs yet. Create one in the STUDIO.</p>
-            ) : (
-              savedDesigns.map((design, index) => (
-                <div key={index} className="design-row" style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", alignItems: "center" }}>
-                  <div className="meta">
-                    <strong>{design.name || `Design #${index + 1}`}</strong>
-                    <div className="design-summary" style={{ fontSize: "12px", color: "var(--color-hint)", marginTop: "4px" }}>
-                      {design.model || "custom"} | color: {design.color} | Sunglasses: {design.isSunglasses ? "Yes" : "No"}
-                    </div>
-                    <div className="design-status" style={{ fontSize: "11px", color: "var(--primary-accent)", marginTop: "2px" }}>
-                      {design.published ? "Published" : "Private"}
-                    </div>
-                  </div>
-                  <div className="actions" style={{ display: "flex", gap: "6px" }}>
-                    <button
-                      className="btn primary"
-                      style={{ backgroundColor: "var(--primary-accent)", borderColor: "var(--primary-accent)", color: "#fff" }}
-                      onClick={() => handleAddToCart(index)}
-                    >
-                      {t("btn-add-to-cart")}
-                    </button>
-                    <button className="btn primary" onClick={() => handleOpenSavedDesign(index)}>
-                      OPEN
-                    </button>
-                    <button className="btn" onClick={() => handleTogglePublishDesign(index)}>
-                      {design.published ? "UNPUBLISH" : "PUBLISH"}
-                    </button>
-                    <button className="btn" onClick={() => handleDeleteSavedDesign(index)}>
-                      DELETE
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+
 
       {toastMessage && (
         <div style={{

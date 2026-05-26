@@ -1,7 +1,6 @@
 // ============================================================
 //   DESIGN CONTROLLER — Designs salvos no Creator Studio
-//   Migrado de PostgreSQL para MySQL
-//   Nota: ON CONFLICT (PostgreSQL) → INSERT ... ON DUPLICATE KEY UPDATE (MySQL)
+//   Migrado para PostgreSQL (pg, $1)
 // ============================================================
 
 import pool from "../config/db.js";
@@ -26,21 +25,19 @@ export async function saveDesign(req, res) {
 
   try {
     if (id) {
-      // Se tem ID, tenta atualizar primeiro
-      const [existing] = await pool.execute(
-        "SELECT id FROM saved_designs WHERE id = ? AND customer_email = ?",
+      const { rows: existing } = await pool.query(
+        "SELECT id FROM saved_designs WHERE id = $1 AND customer_email = $2",
         [id, customerEmail]
       );
 
       if (existing.length > 0) {
-        // Atualiza design existente
-        await pool.execute(
+        await pool.query(
           `UPDATE saved_designs SET
-            nome = ?, modelo = ?, cor = ?,
-            is_sunglasses = ?, anti_reflective = ?, temple_style = ?,
-            top_bar = ?, bridge_style = ?, frame_profile = ?,
-            temple_open = ?, published = ?
-           WHERE id = ? AND customer_email = ?`,
+            nome = $1, modelo = $2, cor = $3,
+            is_sunglasses = $4, anti_reflective = $5, temple_style = $6,
+            top_bar = $7, bridge_style = $8, frame_profile = $9,
+            temple_open = $10, published = $11, atualizado_em = CURRENT_TIMESTAMP
+           WHERE id = $12 AND customer_email = $13`,
           [
             name, model, color,
             Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
@@ -54,13 +51,12 @@ export async function saveDesign(req, res) {
       }
     }
 
-    // Insere novo design
-    const [result] = await pool.execute(
+    const { rows: result } = await pool.query(
       `INSERT INTO saved_designs
         (usuario_id, customer_email, nome, modelo, cor,
          is_sunglasses, anti_reflective, temple_style,
          top_bar, bridge_style, frame_profile, temple_open, published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
       [
         usuarioId, customerEmail, name, model, color,
         Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
@@ -72,7 +68,7 @@ export async function saveDesign(req, res) {
     return res.status(201).json({
       success: true,
       message: "Design salvo com sucesso.",
-      id:      result.insertId
+      id:      result[0].id
     });
 
   } catch (err) {
@@ -89,12 +85,11 @@ export async function getDesigns(req, res) {
   const customerEmail = req.user.email;
 
   try {
-    const [rows] = await pool.execute(
-      "SELECT * FROM saved_designs WHERE customer_email = ? ORDER BY criado_em DESC",
+    const { rows } = await pool.query(
+      "SELECT * FROM saved_designs WHERE customer_email = $1 ORDER BY criado_em DESC",
       [customerEmail]
     );
 
-    // Mapeia snake_case para camelCase para o frontend
     const designs = rows.map(row => ({
       id:             row.id,
       name:           row.nome,
@@ -129,13 +124,12 @@ export async function deleteDesign(req, res) {
   const customerEmail = req.user.email;
 
   try {
-    const [result] = await pool.execute(
-      "DELETE FROM saved_designs WHERE id = ? AND customer_email = ?",
+    const { rowCount } = await pool.query(
+      "DELETE FROM saved_designs WHERE id = $1 AND customer_email = $2",
       [id, customerEmail]
     );
 
-    // affectedRows = 0 significa que não encontrou ou não pertence ao usuário
-    if (result.affectedRows === 0) {
+    if (rowCount === 0) {
       return res.status(404).json({ success: false, error: "Design não encontrado ou sem permissão." });
     }
 

@@ -66,24 +66,20 @@ app.use("/api/categories", categoryRoutes);   // /api/categories
 app.use("/api/stock",      stockRoutes);      // /api/stock (controle de estoque)
 
 // ── Health Check ─────────────────────────────────────────
-app.get("/health", (_req, res) => {
-  res.json({
-    success: true,
-    status:  "Server online",
-    db:      "MySQL",
-    version: "2.0.0"
-  });
+app.get("/health", (req, res) => {
+  res.json({ success: true, status: "Server is healthy and responsive." });
 });
 
-// ── Rota não encontrada ───────────────────────────────────
-app.use((_req, res) => {
-  res.status(404).json({ success: false, error: "Rota não encontrada." });
+// Global 404 Handler - Para interceptar rotas não encontradas
+app.use((req, res, next) => {
+  console.log(`[404] Route Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ success: false, error: `Rota não encontrada: ${req.method} ${req.originalUrl}` });
 });
 
 // ── Handler Global de Erros ───────────────────────────────
-app.use((err, _req, res, _next) => {
-  console.error("Erro não tratado:", err);
-  res.status(500).json({ success: false, error: "Erro interno do servidor." });
+app.use((err, req, res, next) => {
+  console.error("Unhanded server error:", err);
+  res.status(500).json({ success: false, error: "Something went wrong on the server." });
 });
 
 // ── Inicialização ─────────────────────────────────────────
@@ -95,7 +91,7 @@ async function startServer() {
     console.log("==================================================");
     console.log(`🚀 OPTICUS Backend rodando na porta ${PORT}`);
     console.log(`📡 API: http://localhost:${PORT}`);
-    console.log(`🗄️  Banco: MySQL (${process.env.DB_NAME || "opticus_db"})`);
+    console.log(`🗄️  Banco: PostgreSQL (${process.env.DB_NAME || "opticus_db"})`);
     console.log("==================================================");
     console.log("📌 Endpoints disponíveis:");
     console.log("   POST /api/auth/register");

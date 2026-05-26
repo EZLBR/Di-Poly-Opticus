@@ -1,7 +1,7 @@
 // ============================================================
 //   PAYMENT CONTROLLER
-//   Integração com AbacatePay + registro de pagamentos MySQL
-//   Migrado de PostgreSQL para MySQL (pool.execute, ?)
+//   Integração com AbacatePay + registro de pagamentos
+//   Migrado para PostgreSQL (pg, $1)
 // ============================================================
 
 import pool from "../config/db.js";
@@ -21,8 +21,7 @@ export async function createBilling(req, res) {
   }
 
   try {
-    // Busca o pedido no MySQL
-    const [rows] = await pool.execute("SELECT * FROM pedidos WHERE id = ?", [orderId]);
+    const { rows } = await pool.query("SELECT * FROM pedidos WHERE id = $1", [orderId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, error: "Pedido não encontrado." });
@@ -35,12 +34,11 @@ export async function createBilling(req, res) {
     if (isMockToken) {
       const mockBillingId  = `bill-sim-${Math.floor(100000 + Math.random() * 900000)}`;
 
-      await pool.execute(
-        "UPDATE pedidos SET abacate_billing_id = ?, status = 'Pending Payment' WHERE id = ?",
+      await pool.query(
+        "UPDATE pedidos SET abacate_billing_id = $1, status = 'Pending Payment' WHERE id = $2",
         [mockBillingId, orderId]
       );
 
-      // Registra o pagamento como pendente
       await _registrarPagamento(orderId, "pix", "pendente", Number(order.total), mockBillingId);
 
       const mockCheckoutUrl = `http://localhost:${PORT}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}`;
@@ -48,7 +46,6 @@ export async function createBilling(req, res) {
       return res.json({ success: true, checkoutUrl: mockCheckoutUrl, isSimulated: true });
     }
 
-    // AbacatePay real
     const abacateResponse = await fetch("https://api.abacatepay.com/v2/billing", {
       method:  "POST",
       headers: {
@@ -74,8 +71,8 @@ export async function createBilling(req, res) {
     const realBillingId   = abacateData.data.id;
     const realCheckoutUrl = abacateData.data.url;
 
-    await pool.execute(
-      "UPDATE pedidos SET abacate_billing_id = ?, status = 'Pending Payment' WHERE id = ?",
+    await pool.query(
+      "UPDATE pedidos SET abacate_billing_id = $1, status = 'Pending Payment' WHERE id = $2",
       [realBillingId, orderId]
     );
 
@@ -88,8 +85,8 @@ export async function createBilling(req, res) {
 
     const fallbackId  = `bill-fallback-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    await pool.execute(
-      "UPDATE pedidos SET abacate_billing_id = ?, status = 'Pending Payment' WHERE id = ?",
+    await pool.query(
+      "UPDATE pedidos SET abacate_billing_id = $1, status = 'Pending Payment' WHERE id = $2",
       [fallbackId, orderId]
     );
 
@@ -104,8 +101,8 @@ export async function createBilling(req, res) {
 // ─────────────────────────────────────────────────────────
 async function _registrarPagamento(pedidoId, metodo, status, valor, referenciaExterna) {
   try {
-    await pool.execute(
-      "INSERT INTO pagamentos (pedido_id, metodo, status, valor, referencia_externa) VALUES (?, ?, ?, ?, ?)",
+    await pool.query(
+      "INSERT INTO pagamentos (pedido_id, metodo, status, valor, referencia_externa) VALUES ($1, $2, $3, $4, $5)",
       [pedidoId, metodo, status, valor, referenciaExterna]
     );
   } catch (err) {
@@ -119,17 +116,17 @@ async function _registrarPagamento(pedidoId, metodo, status, valor, referenciaEx
 // ─────────────────────────────────────────────────────────
 export async function getPayments(req, res) {
   try {
-    const [rows] = await pool.execute(
+    const { rows } = await pool.query(
       `SELECT
         pg.id,
         pg.pedido_id,
         pg.metodo,
         pg.status,
         pg.valor,
-        pg.referencia_externa AS referenciaExterna,
-        pg.criado_em          AS criadoEm,
-        pd.customer_name      AS clienteNome,
-        pd.customer_email     AS clienteEmail
+        pg.referencia_externa AS "referenciaExterna",
+        pg.criado_em          AS "criadoEm",
+        pd.customer_name      AS "clienteNome",
+        pd.customer_email     AS "clienteEmail"
        FROM pagamentos pg
        INNER JOIN pedidos pd ON pd.id = pg.pedido_id
        ORDER BY pg.criado_em DESC`
@@ -155,20 +152,19 @@ export async function handleWebhook(req, res) {
     if (payload.event === "billing.paid" && payload.data?.id) {
       const billingId = payload.data.id;
 
-      const [rows] = await pool.execute(
-        "SELECT id FROM pedidos WHERE abacate_billing_id = ?",
+      const { rows } = await pool.query(
+        "SELECT id FROM pedidos WHERE abacate_billing_id = $1",
         [billingId]
       );
 
       if (rows.length > 0) {
-        await pool.execute(
-          "UPDATE pedidos SET status = 'Queued' WHERE abacate_billing_id = ?",
+        await pool.query(
+          "UPDATE pedidos SET status = 'Queued' WHERE abacate_billing_id = $1",
           [billingId]
         );
 
-        // Marca o pagamento como aprovado
-        await pool.execute(
-          "UPDATE pagamentos SET status = 'aprovado' WHERE referencia_externa = ?",
+        await pool.query(
+          "UPDATE pagamentos SET status = 'aprovado' WHERE referencia_externa = $1",
           [billingId]
         );
 
@@ -196,8 +192,8 @@ export async function getSimulatedCheckoutPage(req, res) {
   }
 
   try {
-    const [orders] = await pool.execute(
-      "SELECT * FROM pedidos WHERE abacate_billing_id = ?",
+    const { rows: orders } = await pool.query(
+      "SELECT * FROM pedidos WHERE abacate_billing_id = $1",
       [billingId]
     );
 
@@ -279,19 +275,17 @@ export async function confirmSimulatedPayment(req, res) {
   }
 
   try {
-    // Move todos os pedidos para a fila de produção
-    await pool.execute(
-      "UPDATE pedidos SET status = 'Queued' WHERE abacate_billing_id = ?",
+    await pool.query(
+      "UPDATE pedidos SET status = 'Queued' WHERE abacate_billing_id = $1",
       [billingId]
     );
 
-    // Marca o pagamento como aprovado
-    await pool.execute(
-      "UPDATE pagamentos SET status = 'aprovado' WHERE referencia_externa = ?",
+    await pool.query(
+      "UPDATE pagamentos SET status = 'aprovado' WHERE referencia_externa = $1",
       [billingId]
     );
 
-    console.log(`[Simulador] Pagamento confirmado! Cobrança ${billingId} → Fila de Produção.`);
+    console.log(`[Simulador] Pagamento confirmado! Cobrança \${billingId} → Fila de Produção.`);
 
     const referer     = req.headers.referer || "http://localhost:5174";
     const redirectUrl = referer.includes("5173")

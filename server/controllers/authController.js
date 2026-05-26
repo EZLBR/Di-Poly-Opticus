@@ -1,7 +1,7 @@
 // ============================================================
 //   AUTH CONTROLLER
 //   Registro, Login e perfil de usuário
-//   Banco: MySQL via mysql2 (pool de conexões)
+//   Banco: PostgreSQL via pg (pool de conexões)
 // ============================================================
 
 import bcrypt from "bcryptjs";
@@ -35,9 +35,8 @@ export async function register(req, res) {
 
   try {
     // 1. Verifica se o email já existe
-    //    pool.execute() usa prepared statements (protege contra SQL Injection)
-    const [existing] = await pool.execute(
-      "SELECT id FROM usuarios WHERE email = ?",
+    const { rows: existing } = await pool.query(
+      "SELECT id FROM usuarios WHERE email = $1",
       [normEmail]
     );
 
@@ -48,13 +47,12 @@ export async function register(req, res) {
       });
     }
 
-    // 2. Gera hash da senha (nunca salvar senha em texto puro!)
-    //    Custo 10 = bom equilíbrio entre segurança e performance
+    // 2. Gera hash da senha
     const senhaHash = await bcrypt.hash(password, 10);
 
     // 3. Insere o usuário no banco
-    const [result] = await pool.execute(
-      "INSERT INTO usuarios (nome, email, senha_hash, role, factory_name) VALUES (?, ?, ?, ?, ?)",
+    const { rows: result } = await pool.query(
+      "INSERT INTO usuarios (nome, email, senha_hash, role, factory_name) VALUES ($1, $2, $3, $4, $5) RETURNING id",
       [
         name.trim(),
         normEmail,
@@ -64,10 +62,9 @@ export async function register(req, res) {
       ]
     );
 
-    // result.insertId = ID gerado pelo AUTO_INCREMENT do MySQL
-    const userId = result.insertId;
+    const userId = result[0].id;
 
-    // 4. Gera o token JWT com os dados do usuário
+    // 4. Gera o token JWT
     const payload = {
       id:          userId,
       name:        name.trim(),
@@ -106,13 +103,12 @@ export async function login(req, res) {
 
   try {
     // 1. Busca o usuário pelo email
-    const [rows] = await pool.execute(
-      "SELECT * FROM usuarios WHERE email = ?",
+    const { rows } = await pool.query(
+      "SELECT * FROM usuarios WHERE email = $1",
       [normEmail]
     );
 
     if (rows.length === 0) {
-      // Mensagem genérica para não revelar se o email existe
       return res.status(400).json({
         success: false,
         error: "Email ou senha incorretos."
@@ -121,7 +117,7 @@ export async function login(req, res) {
 
     const user = rows[0];
 
-    // 2. Compara a senha com o hash salvo no banco
+    // 2. Compara a senha
     const senhaCorreta = await bcrypt.compare(password, user.senha_hash);
     if (!senhaCorreta) {
       return res.status(400).json({
@@ -157,17 +153,16 @@ export async function login(req, res) {
 // ─────────────────────────────────────────────────────────
 export async function getMe(req, res) {
   try {
-    // req.user.id vem do middleware JWT (protect)
-    const [rows] = await pool.execute(
+    const { rows } = await pool.query(
       `SELECT
         id,
         nome         AS name,
         email,
         role,
-        factory_name AS factoryName,
-        criado_em    AS createdAt
+        factory_name AS "factoryName",
+        criado_em    AS "createdAt"
        FROM usuarios
-       WHERE id = ?`,
+       WHERE id = $1`,
       [req.user.id]
     );
 
@@ -195,14 +190,14 @@ export async function getMe(req, res) {
 // ─────────────────────────────────────────────────────────
 export async function getUsers(req, res) {
   try {
-    const [rows] = await pool.execute(
+    const { rows } = await pool.query(
       `SELECT
         id,
         nome         AS name,
         email,
         role,
-        factory_name AS factoryName,
-        criado_em    AS createdAt
+        factory_name AS "factoryName",
+        criado_em    AS "createdAt"
        FROM usuarios
        ORDER BY criado_em DESC`
     );
@@ -231,12 +226,12 @@ export async function updateUser(req, res) {
   }
 
   try {
-    const [result] = await pool.execute(
-      "UPDATE usuarios SET nome = ?, factory_name = ? WHERE id = ?",
+    const { rowCount } = await pool.query(
+      "UPDATE usuarios SET nome = $1, factory_name = $2 WHERE id = $3",
       [name.trim(), factoryName || null, id]
     );
 
-    if (result.affectedRows === 0) {
+    if (rowCount === 0) {
       return res.status(404).json({ success: false, error: "Usuário não encontrado." });
     }
 
@@ -256,8 +251,8 @@ export async function deleteUser(req, res) {
   const { id } = req.params;
 
   try {
-    const [result] = await pool.execute(
-      "DELETE FROM usuarios WHERE id = ?",
+    const { rowCount } = await pool.query(
+      "DELETE FROM usuarios WHERE id = $1",
       [id]
     );
 

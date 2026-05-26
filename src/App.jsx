@@ -3,6 +3,7 @@ import { useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import Marketplace from "./components/Marketplace";
 import CreatorStudio from "./components/CreatorStudio";
+import DesignsGallery from "./components/DesignsGallery";
 import AuthPage from "./components/AuthPage";
 import { FactoryDashboard, StaffDashboard } from "./components/Dashboards";
 import Cart from "./components/Cart";
@@ -11,7 +12,6 @@ import { Check, X } from "lucide-react";
 
 function App() {
   const [view, setView] = useState("marketplace");
-  const [showDesignsModal, setShowDesignsModal] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const { session } = useAuth();
   const { language } = useTranslation();
@@ -49,33 +49,21 @@ function App() {
   // Synchronize body classes for premium background styling
   useEffect(() => {
     document.body.classList.remove("page-marketplace", "page-create");
-    if (view === "marketplace" || view === "login" || view === "factory-dashboard" || view === "staff-dashboard" || view === "cart") {
+    if (view === "marketplace" || view === "login" || view === "factory-dashboard" || view === "staff-dashboard" || view === "cart" || view === "designs") {
       document.body.classList.add("page-marketplace");
     } else if (view === "create") {
       document.body.classList.add("page-create");
     }
   }, [view]);
 
-  const handleOpenDesigns = () => {
-    setView("marketplace");
-    // Small timeout to ensure view transitions to marketplace before modal toggles
-    setTimeout(() => {
-      setShowDesignsModal(true);
-    }, 50);
-  };
-
   const renderContent = () => {
     switch (view) {
       case "marketplace":
-        return (
-          <Marketplace
-            setView={setView}
-            showDesignsModal={showDesignsModal}
-            onCloseDesignsModal={() => setShowDesignsModal(false)}
-          />
-        );
+        return <Marketplace setView={setView} />;
+      case "designs":
+        return <DesignsGallery setView={setView} />;
       case "create":
-        return <CreatorStudio setView={setView} onOpenDesigns={handleOpenDesigns} />;
+        return <CreatorStudio setView={setView} />;
       case "cart":
         return <Cart setView={setView} />;
       case "login":
@@ -85,13 +73,7 @@ function App() {
       case "staff-dashboard":
         return <StaffDashboard />;
       default:
-        return (
-          <Marketplace
-            setView={setView}
-            showDesignsModal={showDesignsModal}
-            onCloseDesignsModal={() => setShowDesignsModal(false)}
-          />
-        );
+        return <Marketplace setView={setView} />;
     }
   };
 
@@ -100,7 +82,6 @@ function App() {
       <Navbar
         currentView={view}
         setView={setView}
-        onOpenDesigns={handleOpenDesigns}
       />
       <main className="main-content">
         {renderContent()}

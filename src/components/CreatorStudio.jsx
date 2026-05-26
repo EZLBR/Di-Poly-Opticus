@@ -101,6 +101,12 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
   // Auto-rotation toggle
   const [autoRotate, setAutoRotate] = useState(true);
 
+  // Environment / Scenario toggle
+  const [environment, setEnvironment] = useState("studio"); // studio, wood, marble
+  const floorRef = useRef(null);
+  const stagePlateRef = useRef(null);
+  const stageBaseRef = useRef(null);
+
   // Camera yaw/pitch target variables for smooth rotation interpolation
   const cameraAngleRef = useRef({
     targetRadius: 5.5,
@@ -278,6 +284,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     floor.position.y = -1.52;
     floor.receiveShadow = true;
     scene.add(floor);
+    floorRef.current = floor;
 
     const stageBase = new THREE.Mesh(
       new THREE.CylinderGeometry(2.55, 2.85, 0.22, 48),
@@ -292,6 +299,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     stageBase.position.y = -1.42;
     stageBase.receiveShadow = true;
     scene.add(stageBase);
+    stageBaseRef.current = stageBase;
 
     const stagePlate = new THREE.Mesh(
       new THREE.CylinderGeometry(2.12, 2.26, 0.08, 48),
@@ -306,6 +314,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
     stagePlate.position.y = -1.28;
     stagePlate.receiveShadow = true;
     scene.add(stagePlate);
+    stagePlateRef.current = stagePlate;
 
     const haloRing = new THREE.Mesh(
       new THREE.TorusGeometry(2.05, 0.035, 12, 60),
@@ -464,6 +473,34 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       rightTemplePivotRef.current.rotation.y = templeOpen;
     }
   }, [templeOpen]);
+
+  // --- Dynamic Environment Updates ---
+  useEffect(() => {
+    if (!stagePlateRef.current || !stageBaseRef.current || !floorRef.current || !sceneRef.current) return;
+    
+    if (environment === "wood") {
+      // Wood table style
+      floorRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0x2a1c15, roughness: 0.9, metalness: 0 });
+      stagePlateRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0x4a3219, roughness: 0.8, metalness: 0, clearcoat: 0.2 });
+      stageBaseRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0x3d2713, roughness: 0.9, metalness: 0 });
+      sceneRef.current.background = new THREE.Color(0x1a120b);
+      sceneRef.current.fog = new THREE.Fog(0x1a120b, 10, 20);
+    } else if (environment === "marble") {
+      // Marble floor style
+      floorRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0xe0e5ec, roughness: 0.1, metalness: 0.1, clearcoat: 1.0 });
+      stagePlateRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, metalness: 0.05, clearcoat: 1.0 });
+      stageBaseRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0xd0d5dc, roughness: 0.2, metalness: 0.1 });
+      sceneRef.current.background = new THREE.Color(0xeef2f7);
+      sceneRef.current.fog = new THREE.Fog(0xeef2f7, 10, 20);
+    } else {
+      // Default Studio
+      floorRef.current.material = new THREE.ShadowMaterial({ opacity: 0.18 });
+      stagePlateRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.28, metalness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05 });
+      stageBaseRef.current.material = new THREE.MeshPhysicalMaterial({ color: 0xf8fbff, roughness: 0.72, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.18 });
+      sceneRef.current.background = new THREE.Color(0xf6f8fc);
+      sceneRef.current.fog = new THREE.Fog(0xf3f6fb, 11, 22);
+    }
+  }, [environment]);
 
   // --- 5. Three.js Procedural Eyewear Modeling Engine ---
   function buildGlassesMesh() {
@@ -1529,6 +1566,52 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                 </button>
               </div>
             </div>
+
+            {/* Scenario / Environment Toggle */}
+            {!tryOnMode && (
+              <div 
+                style={{
+                  background: "var(--glass-card-bg)",
+                  backdropFilter: "blur(24px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                  border: "1px solid var(--glass-card-border)",
+                  borderRadius: "16px",
+                  padding: "12px 16px",
+                  marginTop: "10px",
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "center",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
+                }}
+              >
+                <span className="panel-kicker" style={{ margin: 0, color: "var(--text-dark)" }}>
+                  SCENARIO
+                </span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button 
+                    className={`btn ${environment === "studio" ? "primary" : ""}`}
+                    style={{ height: "30px", padding: "0 12px", fontSize: "12px" }}
+                    onClick={() => setEnvironment("studio")}
+                  >
+                    Studio
+                  </button>
+                  <button 
+                    className={`btn ${environment === "wood" ? "primary" : ""}`}
+                    style={{ height: "30px", padding: "0 12px", fontSize: "12px" }}
+                    onClick={() => setEnvironment("wood")}
+                  >
+                    Wood
+                  </button>
+                  <button 
+                    className={`btn ${environment === "marble" ? "primary" : ""}`}
+                    style={{ height: "30px", padding: "0 12px", fontSize: "12px" }}
+                    onClick={() => setEnvironment("marble")}
+                  >
+                    Marble
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Rendering Canvas wrapper - Now absolute and full screen */}

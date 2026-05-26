@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Moon, Sun, Globe, LogOut } from "lucide-react";
 
-export default function Navbar({ currentView, setView, onOpenDesigns }) {
+export default function Navbar({ currentView, setView }) {
   const { session, logout, cart } = useAuth();
   const { language, setLanguage, t } = useTranslation();
   const [darkMode, setDarkMode] = useState(() => {
@@ -52,7 +52,11 @@ export default function Navbar({ currentView, setView, onOpenDesigns }) {
             >
               {t("nav-studio")}
             </a>
-            <a href="#" onClick={(e) => { e.preventDefault(); onOpenDesigns(); }}>
+            <a
+              href="#"
+              className={currentView === "designs" ? "active" : ""}
+              onClick={(e) => handleNavClick("designs", e)}
+            >
               {t("nav-my-designs")}
             </a>
             <a
