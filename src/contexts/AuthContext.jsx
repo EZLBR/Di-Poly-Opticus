@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+let API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+if (API_URL.endsWith('/')) API_URL = API_URL.slice(0, -1);
+if (!API_URL.endsWith('/api')) API_URL = `${API_URL}/api`;
 const LS_USERS = "opticus_users";
 const LS_SESSION = "opticus_session";
 const LS_ORDERS = "opticus_orders";
