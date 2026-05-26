@@ -3,6 +3,29 @@ import { useAuth } from "../contexts/AuthContext";
 import { ShoppingBag, Users, Building, ShieldCheck, DollarSign } from "lucide-react";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
+const CURRENCY_RATES = {
+  USD: { rate: 1, symbol: "$" },
+  BRL: { rate: 5.15, symbol: "R$" },
+  EUR: { rate: 0.92, symbol: "€" }
+};
+
+const filterOrdersByTime = (orders, timeRange) => {
+  if (timeRange === "total") return orders;
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const currentMonthStr = todayStr.substring(0, 7); // YYYY-MM
+  const currentYearStr = todayStr.substring(0, 4); // YYYY
+
+  return orders.filter(o => {
+    const d = o.createdAt;
+    if (!d) return true;
+    if (timeRange === "day") return d === todayStr;
+    if (timeRange === "month") return d.startsWith(currentMonthStr);
+    if (timeRange === "year") return d.startsWith(currentYearStr);
+    return true;
+  });
+};
+
 export function FactoryDashboard() {
   const { session, orders, updateOrderStatus } = useAuth();
   
@@ -10,14 +33,19 @@ export function FactoryDashboard() {
     return <p>Access denied.</p>;
   }
 
-  const factoryOrders = orders.filter((o) => o.factoryId === session.id);
+  const [timeRange, setTimeRange] = useState("total");
+  const [currency, setCurrency] = useState("USD");
+  const { rate, symbol } = CURRENCY_RATES[currency] || CURRENCY_RATES.USD;
+
+  const allFactoryOrders = orders.filter((o) => o.factoryId === session.id);
+  const factoryOrders = filterOrdersByTime(allFactoryOrders, timeRange);
 
   const handleStatusChange = (orderId, newStatus) => {
     updateOrderStatus(orderId, newStatus);
   };
 
   // 1. Calculate Summary Stats
-  const totalRevenue = factoryOrders.reduce((sum, order) => sum + Number(order.total), 0);
+  const totalRevenue = factoryOrders.reduce((sum, order) => sum + (Number(order.total) * rate), 0);
   const totalOrders = factoryOrders.length;
   const avgTicket = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0;
 
@@ -37,7 +65,7 @@ export function FactoryDashboard() {
   factoryOrders.forEach(o => {
     const d = o.createdAt || "Recent";
     if (!dateMap[d]) dateMap[d] = 0;
-    dateMap[d] += Number(o.total);
+    dateMap[d] += (Number(o.total) * rate);
   });
   const areaData = Object.keys(dateMap).map(d => ({
     date: d,
@@ -46,6 +74,20 @@ export function FactoryDashboard() {
 
   return (
     <div className="factory-dashboard-container" style={{ padding: "40px 20px", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginBottom: "10px" }}>
+        <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="premium-select" style={{ padding: "8px 12px", borderRadius: "6px" }}>
+          <option value="total">Período: Total</option>
+          <option value="year">Este Ano</option>
+          <option value="month">Este Mês</option>
+          <option value="day">Hoje</option>
+        </select>
+        <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="premium-select" style={{ padding: "8px 12px", borderRadius: "6px" }}>
+          <option value="USD">Moeda: USD ($)</option>
+          <option value="BRL">Moeda: BRL (R$)</option>
+          <option value="EUR">Moeda: EUR (€)</option>
+        </select>
+      </div>
+
       <header className="dashboard-header" style={{ marginBottom: "30px" }}>
         <span className="eyebrow" style={{ color: "var(--primary-accent)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}>
           Production Line Portal
@@ -61,7 +103,7 @@ export function FactoryDashboard() {
         <div className="premium-glass-card" style={{ padding: "24px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <span style={{ fontSize: "14px", color: "var(--color-hint)" }}>Total em Vendas</span>
-            <strong style={{ display: "block", fontSize: "32px", fontWeight: "700" }}>${totalRevenue.toFixed(2)}</strong>
+            <strong style={{ display: "block", fontSize: "32px", fontWeight: "700" }}>{symbol}{totalRevenue.toFixed(2)}</strong>
           </div>
           <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}>
             <DollarSign size={28} />
@@ -81,7 +123,7 @@ export function FactoryDashboard() {
         <div className="premium-glass-card" style={{ padding: "24px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <span style={{ fontSize: "14px", color: "var(--color-hint)" }}>Ticket Médio</span>
-            <strong style={{ display: "block", fontSize: "32px", fontWeight: "700" }}>${avgTicket}</strong>
+            <strong style={{ display: "block", fontSize: "32px", fontWeight: "700" }}>{symbol}{avgTicket}</strong>
           </div>
           <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "rgba(234, 179, 8, 0.1)", color: "#eab308" }}>
             <DollarSign size={28} />
@@ -194,7 +236,7 @@ export function FactoryDashboard() {
                       {order.status}
                     </span>
                   </td>
-                  <td>${Number(order.total).toFixed(2)}</td>
+                  <td>{symbol}{(Number(order.total) * rate).toFixed(2)}</td>
                   <td>
                     <select
                       value={order.status}
@@ -217,18 +259,24 @@ export function FactoryDashboard() {
 }
 
 export function StaffDashboard() {
-  const { session, orders, users } = useAuth();
+  const { session, orders: allStaffOrders, users } = useAuth();
 
   if (!session || session.role !== "staff") {
     return <p>Access denied.</p>;
   }
+
+  const [timeRange, setTimeRange] = useState("total");
+  const [currency, setCurrency] = useState("USD");
+  const { rate, symbol } = CURRENCY_RATES[currency] || CURRENCY_RATES.USD;
+
+  const orders = filterOrdersByTime(allStaffOrders, timeRange);
 
   const clientsCount = users.filter((u) => u.role === "client").length;
   const factoriesCount = users.filter((u) => u.role === "factory").length;
   const staffCount = users.filter((u) => u.role === "staff").length;
 
   // Analytics Calculations
-  const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total) * rate), 0);
 
   const statusCount = { Queued: 0, "In production": 0, Delivered: 0, "Pending Payment": 0 };
   orders.forEach((o) => {
@@ -246,7 +294,7 @@ export function StaffDashboard() {
   orders.forEach((o) => {
     const fname = o.factoryName || "Unknown";
     if (!factoryMap[fname]) factoryMap[fname] = 0;
-    factoryMap[fname] += Number(o.total);
+    factoryMap[fname] += (Number(o.total) * rate);
   });
   const barData = Object.keys(factoryMap).map((key) => ({
     name: key,
@@ -255,6 +303,20 @@ export function StaffDashboard() {
 
   return (
     <div className="staff-dashboard-container" style={{ padding: "40px 20px", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginBottom: "10px" }}>
+        <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="premium-select" style={{ padding: "8px 12px", borderRadius: "6px" }}>
+          <option value="total">Período: Total</option>
+          <option value="year">Este Ano</option>
+          <option value="month">Este Mês</option>
+          <option value="day">Hoje</option>
+        </select>
+        <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="premium-select" style={{ padding: "8px 12px", borderRadius: "6px" }}>
+          <option value="USD">Moeda: USD ($)</option>
+          <option value="BRL">Moeda: BRL (R$)</option>
+          <option value="EUR">Moeda: EUR (€)</option>
+        </select>
+      </div>
+
       <header className="dashboard-header" style={{ marginBottom: "35px" }}>
         <span className="eyebrow" style={{ color: "var(--primary-accent)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}>
           Platform Management Console
@@ -288,7 +350,7 @@ export function StaffDashboard() {
             <DollarSign size={24} />
           </div>
           <div>
-            <strong style={{ display: "block", fontSize: "28px", fontWeight: "700" }}>${totalRevenue.toFixed(2)}</strong>
+            <strong style={{ display: "block", fontSize: "28px", fontWeight: "700" }}>{symbol}{totalRevenue.toFixed(2)}</strong>
             <span style={{ fontSize: "13px", color: "var(--color-hint)" }}>Total Revenue</span>
           </div>
         </div>
@@ -463,7 +525,7 @@ export function StaffDashboard() {
                         {order.status}
                       </span>
                     </td>
-                    <td>${Number(order.total).toFixed(2)}</td>
+                    <td>{symbol}{(Number(order.total) * rate).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
