@@ -1,11 +1,21 @@
 -- ============================================================
 --   OPTICUS DATABASE SCHEMA
---   MySQL 8.x  |  Charset: utf8mb4
+--   MySQL 8.x  |  Charset: utf8mb4  |  Collation: utf8mb4_unicode_ci
 --   Ordem de criação: sem dependência → com dependência
+--
+--   Uso:
+--     mysql -u SEU_USER -p SEU_BANCO < schema.sql
+--
+--   ⚠️  Este arquivo é executado UMA VEZ em banco novo.
+--       O servidor (db.js) já cria as tabelas automaticamente
+--       via initializeDatabase() ao iniciar — este arquivo é
+--       para referência e restauração manual.
 -- ============================================================
 
--- Garante que estamos no banco correto
-USE opticus_db;
+-- Garante charset padrão para o banco
+ALTER DATABASE opticus_db
+  CHARACTER SET  = utf8mb4
+  COLLATE        = utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 1. CATEGORIAS
@@ -18,7 +28,7 @@ CREATE TABLE IF NOT EXISTS categorias (
   nome        VARCHAR(100)  NOT NULL,
   descricao   TEXT,
   criado_em   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 2. USUARIOS
@@ -33,7 +43,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   role          ENUM('client', 'factory', 'staff') DEFAULT 'client',
   factory_name  VARCHAR(255),
   criado_em     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 3. PRODUTOS
@@ -56,7 +66,7 @@ CREATE TABLE IF NOT EXISTS produtos (
     REFERENCES categorias(id)
     ON DELETE SET NULL    -- se categoria for deletada, produto fica sem categoria
     ON UPDATE CASCADE     -- se o id da categoria mudar, atualiza aqui também
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 4. PEDIDOS
@@ -95,7 +105,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
     FOREIGN KEY (factory_id)
     REFERENCES usuarios(id)
     ON DELETE SET NULL    -- se fábrica for removida, pedido fica sem fábrica
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 5. PEDIDO_ITENS (tabela de junção N:N)
@@ -119,7 +129,7 @@ CREATE TABLE IF NOT EXISTS pedido_itens (
     FOREIGN KEY (produto_id)
     REFERENCES produtos(id)
     ON DELETE RESTRICT    -- impede deletar produto que está em pedidos
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 6. ESTOQUE
@@ -138,7 +148,7 @@ CREATE TABLE IF NOT EXISTS estoque (
     FOREIGN KEY (produto_id)
     REFERENCES produtos(id)
     ON DELETE CASCADE     -- se produto for deletado, deleta o estoque
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 7. PAGAMENTOS
@@ -159,7 +169,7 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     FOREIGN KEY (pedido_id)
     REFERENCES pedidos(id)
     ON DELETE CASCADE     -- se pedido for deletado, deleta os pagamentos
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ──────────────────────────────────────────────────────────
 -- 8. SAVED_DESIGNS (designs salvos no Creator Studio)
@@ -187,20 +197,23 @@ CREATE TABLE IF NOT EXISTS saved_designs (
     FOREIGN KEY (usuario_id)
     REFERENCES usuarios(id)
     ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 --   ÍNDICES DE PERFORMANCE
 --   Colunas frequentemente usadas em WHERE, JOIN ou ORDER BY
+--   ⚠️  MySQL não suporta "CREATE INDEX IF NOT EXISTS"
+--       Execute estes comandos apenas em banco novo, ou
+--       verifique manualmente com SHOW INDEX FROM <tabela>
 -- ============================================================
 
-CREATE INDEX IF NOT EXISTS idx_produtos_categoria  ON produtos(categoria_id);
-CREATE INDEX IF NOT EXISTS idx_pedidos_usuario     ON pedidos(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_pedidos_factory     ON pedidos(factory_id);
-CREATE INDEX IF NOT EXISTS idx_pedidos_status      ON pedidos(status);
-CREATE INDEX IF NOT EXISTS idx_pedidos_billing     ON pedidos(abacate_billing_id);
-CREATE INDEX IF NOT EXISTS idx_itens_pedido        ON pedido_itens(pedido_id);
-CREATE INDEX IF NOT EXISTS idx_itens_produto       ON pedido_itens(produto_id);
-CREATE INDEX IF NOT EXISTS idx_pagamentos_pedido   ON pagamentos(pedido_id);
-CREATE INDEX IF NOT EXISTS idx_designs_usuario     ON saved_designs(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_designs_email       ON saved_designs(customer_email);
+CREATE INDEX idx_produtos_categoria  ON produtos(categoria_id);
+CREATE INDEX idx_pedidos_usuario     ON pedidos(usuario_id);
+CREATE INDEX idx_pedidos_factory     ON pedidos(factory_id);
+CREATE INDEX idx_pedidos_status      ON pedidos(status);
+CREATE INDEX idx_pedidos_billing     ON pedidos(abacate_billing_id);
+CREATE INDEX idx_itens_pedido        ON pedido_itens(pedido_id);
+CREATE INDEX idx_itens_produto       ON pedido_itens(produto_id);
+CREATE INDEX idx_pagamentos_pedido   ON pagamentos(pedido_id);
+CREATE INDEX idx_designs_usuario     ON saved_designs(usuario_id);
+CREATE INDEX idx_designs_email       ON saved_designs(customer_email);

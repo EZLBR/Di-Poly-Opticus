@@ -72,7 +72,9 @@ export async function createProduct(req, res) {
 // ─────────────────────────────────────────────────────────
 export async function getProducts(req, res) {
   const { categoria_id, search, page = 1, limit = 20 } = req.query;
-  const offset = (Number(page) - 1) * Number(limit);
+  // Garante que limit e offset são inteiros válidos
+  const lim    = Math.max(1, Math.min(100, parseInt(limit,  10) || 20));
+  const off    = Math.max(0, (parseInt(page, 10) - 1 || 0) * lim);
 
   try {
     // Monta a query dinamicamente baseado nos filtros
@@ -90,8 +92,11 @@ export async function getProducts(req, res) {
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    // Query principal com JOIN para trazer o nome da categoria
-    const [rows] = await pool.execute(
+    // ⚠️  LIMIT e OFFSET são interpolados diretamente (não como ?)
+    //     pois mysql2 prepared statements têm bugs com LIMIT/OFFSET
+    //     como parâmetros em algumas versões do MySQL 8/9.
+    //     São seguros pois já foram validados como inteiros acima.
+    const [rows] = await pool.query(
       `SELECT
         p.id,
         p.nome,
@@ -108,12 +113,12 @@ export async function getProducts(req, res) {
        LEFT JOIN estoque    e ON e.produto_id = p.id
        ${where}
        ORDER BY p.criado_em DESC
-       LIMIT ? OFFSET ?`,
-      [...params, Number(limit), offset]
+       LIMIT ${lim} OFFSET ${off}`,
+      params
     );
 
     // Total de registros para paginação no frontend
-    const [countRows] = await pool.execute(
+    const [countRows] = await pool.query(
       `SELECT COUNT(*) AS total FROM produtos p ${where}`,
       params
     );
@@ -122,8 +127,8 @@ export async function getProducts(req, res) {
       success: true,
       produtos:   rows,
       total:      countRows[0].total,
-      page:       Number(page),
-      totalPages: Math.ceil(countRows[0].total / Number(limit))
+      page:       parseInt(page, 10) || 1,
+      totalPages: Math.ceil(countRows[0].total / lim)
     });
 
   } catch (err) {
