@@ -3535,7 +3535,8 @@ body.dark .btn.primary:hover {
   70% { box-shadow: 0 0 0 10px rgba(24, 59, 86, 0); }
   100% { box-shadow: 0 0 0 0 rgba(24, 59, 86, 0); }
 }
-body.dark @keyframes subtlePulse {
+
+@keyframes subtlePulseDark {
   0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
   70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
