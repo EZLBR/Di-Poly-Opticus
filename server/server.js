@@ -23,8 +23,25 @@ const app  = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middlewares Globais ──────────────────────────────────
+//   CORS: aceita localhost (dev) + Vercel (produção)
+//   FRONTEND_URL = URL exata do Vercel (definida no Railway após o deploy)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,           // ex: https://di-poly-opticus.vercel.app
+].filter(Boolean);                    // remove undefined se FRONTEND_URL não estiver definida
+
 app.use(cors({
-  origin:      ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+  origin: (origin, callback) => {
+    // Permite requisições sem origin (Postman, mobile, curl)
+    if (!origin) return callback(null, true);
+    // Permite qualquer subdomínio do Vercel durante preview deploys
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
+    // Verifica lista de origens permitidas
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS bloqueado para origem: ${origin}`));
+  },
   credentials: true
 }));
 
