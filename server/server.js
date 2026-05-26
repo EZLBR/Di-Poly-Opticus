@@ -1,59 +1,94 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+// ============================================================
+//   OPTICUS BACKEND — Servidor Principal
+//   Express.js + MySQL (mysql2)
+// ============================================================
+
+import express  from "express";
+import cors     from "cors";
+import dotenv   from "dotenv";
 import { initializeDatabase } from "./config/db.js";
 
-// Routes imports
-import authRoutes from "./routes/authRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import designRoutes from "./routes/designRoutes.js";
+// ── Importação de Rotas ──────────────────────────────────
+import authRoutes     from "./routes/authRoutes.js";
+import orderRoutes    from "./routes/orderRoutes.js";
+import paymentRoutes  from "./routes/paymentRoutes.js";
+import designRoutes   from "./routes/designRoutes.js";
+import productRoutes  from "./routes/productRoutes.js";    // ← NOVO
+import categoryRoutes from "./routes/categoryRoutes.js";  // ← NOVO
+import stockRoutes    from "./routes/stockRoutes.js";     // ← NOVO
 
 dotenv.config();
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware Configurations
+// ── Middlewares Globais ──────────────────────────────────
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+  origin:      ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
   credentials: true
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log request middleware for active monitoring
-app.use((req, res, next) => {
+// Logger de requisições
+app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString().split("T")[1].slice(0, 8)}] ${req.method} ${req.url}`);
   next();
 });
 
-// Register REST Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/designs", designRoutes);
+// ── Registro de Rotas ────────────────────────────────────
+//   Cada rota tem um prefixo /api/<recurso>
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({ success: true, status: "Server is healthy and responsive." });
+app.use("/api/auth",       authRoutes);       // /api/auth/register, /api/auth/login ...
+app.use("/api/orders",     orderRoutes);      // /api/orders, /api/orders/:id/status ...
+app.use("/api/payments",   paymentRoutes);    // /api/payments/create-billing, /webhook ...
+app.use("/api/designs",    designRoutes);     // /api/designs (Creator Studio)
+app.use("/api/products",   productRoutes);    // /api/products (catálogo)
+app.use("/api/categories", categoryRoutes);   // /api/categories
+app.use("/api/stock",      stockRoutes);      // /api/stock (controle de estoque)
+
+// ── Health Check ─────────────────────────────────────────
+app.get("/health", (_req, res) => {
+  res.json({
+    success: true,
+    status:  "Server online",
+    db:      "MySQL",
+    version: "2.0.0"
+  });
 });
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error("Unhanded server error:", err);
-  res.status(500).json({ success: false, error: "Something went wrong on the server." });
+// ── Rota não encontrada ───────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({ success: false, error: "Rota não encontrada." });
 });
 
-// Boot Database and Listen
+// ── Handler Global de Erros ───────────────────────────────
+app.use((err, _req, res, _next) => {
+  console.error("Erro não tratado:", err);
+  res.status(500).json({ success: false, error: "Erro interno do servidor." });
+});
+
+// ── Inicialização ─────────────────────────────────────────
 async function startServer() {
+  // Inicializa o banco (cria tabelas se necessário) antes de aceitar requisições
   await initializeDatabase();
+
   app.listen(PORT, () => {
-    console.log(`==================================================`);
-    console.log(`🚀 OPTICUS Backend Server running on port ${PORT}`);
-    console.log(`📡 URL API: http://localhost:${PORT}`);
-    console.log(`==================================================`);
+    console.log("==================================================");
+    console.log(`🚀 OPTICUS Backend rodando na porta ${PORT}`);
+    console.log(`📡 API: http://localhost:${PORT}`);
+    console.log(`🗄️  Banco: MySQL (${process.env.DB_NAME || "opticus_db"})`);
+    console.log("==================================================");
+    console.log("📌 Endpoints disponíveis:");
+    console.log("   POST /api/auth/register");
+    console.log("   POST /api/auth/login");
+    console.log("   GET  /api/products");
+    console.log("   GET  /api/categories");
+    console.log("   GET  /api/stock");
+    console.log("   GET  /api/orders");
+    console.log("   GET  /api/payments");
+    console.log("==================================================");
   });
 }
 

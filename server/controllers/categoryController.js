@@ -1,0 +1,179 @@
+// ============================================================
+//   CATEGORY CONTROLLER — CRUD de Categorias
+//   Rotas: /api/categories
+// ============================================================
+
+import pool from "../config/db.js";
+
+// ─────────────────────────────────────────────────────────
+//   CRIAR CATEGORIA
+//   POST /api/categories
+// ─────────────────────────────────────────────────────────
+export async function createCategory(req, res) {
+  const { nome, descricao } = req.body;
+
+  if (!nome) {
+    return res.status(400).json({ success: false, error: "Nome da categoria é obrigatório." });
+  }
+
+  try {
+    // Verifica se já existe uma categoria com esse nome
+    const [existing] = await pool.execute(
+      "SELECT id FROM categorias WHERE nome = ?",
+      [nome.trim()]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: "Já existe uma categoria com esse nome." });
+    }
+
+    const [result] = await pool.execute(
+      "INSERT INTO categorias (nome, descricao) VALUES (?, ?)",
+      [nome.trim(), descricao || null]
+    );
+
+    const [rows] = await pool.execute(
+      "SELECT * FROM categorias WHERE id = ?",
+      [result.insertId]
+    );
+
+    return res.status(201).json({ success: true, categoria: rows[0] });
+
+  } catch (err) {
+    console.error("Erro ao criar categoria:", err);
+    return res.status(500).json({ success: false, error: "Falha ao criar categoria." });
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//   LISTAR CATEGORIAS (com contagem de produtos)
+//   GET /api/categories
+// ─────────────────────────────────────────────────────────
+export async function getCategories(req, res) {
+  try {
+    // LEFT JOIN + COUNT para mostrar quantos produtos há em cada categoria
+    const [rows] = await pool.execute(
+      `SELECT
+        c.id,
+        c.nome,
+        c.descricao,
+        c.criado_em,
+        COUNT(p.id) AS total_produtos
+       FROM categorias c
+       LEFT JOIN produtos p ON p.categoria_id = c.id AND p.ativo = TRUE
+       GROUP BY c.id
+       ORDER BY c.nome ASC`
+    );
+
+    return res.json({ success: true, categorias: rows });
+
+  } catch (err) {
+    console.error("Erro ao listar categorias:", err);
+    return res.status(500).json({ success: false, error: "Falha ao carregar categorias." });
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//   BUSCAR CATEGORIA POR ID (com seus produtos)
+//   GET /api/categories/:id
+// ─────────────────────────────────────────────────────────
+export async function getCategoryById(req, res) {
+  const { id } = req.params;
+
+  try {
+    // Categoria
+    const [catRows] = await pool.execute(
+      "SELECT * FROM categorias WHERE id = ?",
+      [id]
+    );
+
+    if (catRows.length === 0) {
+      return res.status(404).json({ success: false, error: "Categoria não encontrada." });
+    }
+
+    // Produtos desta categoria
+    const [prodRows] = await pool.execute(
+      "SELECT id, nome, preco, imagem_url, ativo FROM produtos WHERE categoria_id = ? AND ativo = TRUE",
+      [id]
+    );
+
+    return res.json({
+      success: true,
+      categoria: { ...catRows[0], produtos: prodRows }
+    });
+
+  } catch (err) {
+    console.error("Erro ao buscar categoria:", err);
+    return res.status(500).json({ success: false, error: "Falha ao buscar categoria." });
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//   ATUALIZAR CATEGORIA
+//   PUT /api/categories/:id
+// ─────────────────────────────────────────────────────────
+export async function updateCategory(req, res) {
+  const { id } = req.params;
+  const { nome, descricao } = req.body;
+
+  if (!nome) {
+    return res.status(400).json({ success: false, error: "Nome é obrigatório." });
+  }
+
+  try {
+    const [result] = await pool.execute(
+      "UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?",
+      [nome.trim(), descricao || null, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: "Categoria não encontrada." });
+    }
+
+    const [rows] = await pool.execute("SELECT * FROM categorias WHERE id = ?", [id]);
+
+    return res.json({ success: true, categoria: rows[0] });
+
+  } catch (err) {
+    console.error("Erro ao atualizar categoria:", err);
+    return res.status(500).json({ success: false, error: "Falha ao atualizar categoria." });
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//   DELETAR CATEGORIA
+//   DELETE /api/categories/:id
+// ─────────────────────────────────────────────────────────
+export async function deleteCategory(req, res) {
+  const { id } = req.params;
+
+  try {
+    // Verifica se existem produtos usando esta categoria
+    const [prods] = await pool.execute(
+      "SELECT COUNT(*) AS total FROM produtos WHERE categoria_id = ? AND ativo = TRUE",
+      [id]
+    );
+
+    if (prods[0].total > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Não é possível deletar. ${prods[0].total} produto(s) ainda usam essa categoria.`
+      });
+    }
+
+    const [result] = await pool.execute(
+      "DELETE FROM categorias WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: "Categoria não encontrada." });
+    }
+
+    return res.json({ success: true, message: "Categoria removida com sucesso." });
+
+  } catch (err) {
+    console.error("Erro ao deletar categoria:", err);
+    return res.status(500).json({ success: false, error: "Falha ao remover categoria." });
+  }
+}

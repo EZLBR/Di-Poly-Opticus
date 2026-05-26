@@ -1,92 +1,148 @@
+// ============================================================
+//   DESIGN CONTROLLER — Designs salvos no Creator Studio
+//   Migrado de PostgreSQL para MySQL
+//   Nota: ON CONFLICT (PostgreSQL) → INSERT ... ON DUPLICATE KEY UPDATE (MySQL)
+// ============================================================
+
 import pool from "../config/db.js";
 
-// Save a new design
+// ─────────────────────────────────────────────────────────
+//   SALVAR DESIGN (cria ou atualiza)
+//   POST /api/designs
+// ─────────────────────────────────────────────────────────
 export async function saveDesign(req, res) {
-  const { id, name, model, color, is_sunglasses, anti_reflective, temple_style, top_bar, bridge_style, frame_profile, temple_open, published } = req.body;
-  const customerEmail = req.user.email;
+  const {
+    id, name, model, color,
+    is_sunglasses, anti_reflective, temple_style,
+    top_bar, bridge_style, frame_profile, temple_open, published
+  } = req.body;
 
-  if (!id || !name || !model || !color) {
-    return res.status(400).json({ success: false, error: "Missing required design parameters." });
+  const customerEmail = req.user.email;
+  const usuarioId     = req.user.id;
+
+  if (!name || !model || !color) {
+    return res.status(400).json({ success: false, error: "Nome, modelo e cor são obrigatórios." });
   }
 
   try {
-    await pool.query(
-      `INSERT INTO saved_designs 
-      (id, customer_email, name, model, color, is_sunglasses, anti_reflective, temple_style, top_bar, bridge_style, frame_profile, temple_open, published) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      ON CONFLICT(id) DO UPDATE SET 
-      name=EXCLUDED.name, model=EXCLUDED.model, color=EXCLUDED.color, is_sunglasses=EXCLUDED.is_sunglasses, 
-      anti_reflective=EXCLUDED.anti_reflective, temple_style=EXCLUDED.temple_style, top_bar=EXCLUDED.top_bar, 
-      bridge_style=EXCLUDED.bridge_style, frame_profile=EXCLUDED.frame_profile, temple_open=EXCLUDED.temple_open, 
-      published=EXCLUDED.published;`,
+    if (id) {
+      // Se tem ID, tenta atualizar primeiro
+      const [existing] = await pool.execute(
+        "SELECT id FROM saved_designs WHERE id = ? AND customer_email = ?",
+        [id, customerEmail]
+      );
+
+      if (existing.length > 0) {
+        // Atualiza design existente
+        await pool.execute(
+          `UPDATE saved_designs SET
+            nome = ?, modelo = ?, cor = ?,
+            is_sunglasses = ?, anti_reflective = ?, temple_style = ?,
+            top_bar = ?, bridge_style = ?, frame_profile = ?,
+            temple_open = ?, published = ?
+           WHERE id = ? AND customer_email = ?`,
+          [
+            name, model, color,
+            Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
+            Boolean(top_bar), bridge_style || "keyhole", frame_profile || "medium",
+            temple_open || 0.00, Boolean(published),
+            id, customerEmail
+          ]
+        );
+
+        return res.json({ success: true, message: "Design atualizado com sucesso." });
+      }
+    }
+
+    // Insere novo design
+    const [result] = await pool.execute(
+      `INSERT INTO saved_designs
+        (usuario_id, customer_email, nome, modelo, cor,
+         is_sunglasses, anti_reflective, temple_style,
+         top_bar, bridge_style, frame_profile, temple_open, published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id, customerEmail, name, model, color, 
-        is_sunglasses ? true : false, anti_reflective ? true : false, temple_style || 'standard', 
-        top_bar ? true : false, bridge_style || 'keyhole', frame_profile || 'medium', 
-        temple_open || 0.00, published ? true : false
+        usuarioId, customerEmail, name, model, color,
+        Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
+        Boolean(top_bar), bridge_style || "keyhole", frame_profile || "medium",
+        temple_open || 0.00, Boolean(published)
       ]
     );
 
-    return res.status(201).json({ success: true, message: "Design saved successfully." });
+    return res.status(201).json({
+      success: true,
+      message: "Design salvo com sucesso.",
+      id:      result.insertId
+    });
+
   } catch (err) {
-    console.error("Save design error:", err);
-    return res.status(500).json({ success: false, error: "Failed to save design to the cloud." });
+    console.error("Erro ao salvar design:", err);
+    return res.status(500).json({ success: false, error: "Falha ao salvar design." });
   }
 }
 
-// Get all designs for the authenticated user
+// ─────────────────────────────────────────────────────────
+//   LISTAR DESIGNS DO USUÁRIO
+//   GET /api/designs
+// ─────────────────────────────────────────────────────────
 export async function getDesigns(req, res) {
   const customerEmail = req.user.email;
 
   try {
-    const { rows } = await pool.query(
-      "SELECT * FROM saved_designs WHERE customer_email = $1 ORDER BY created_at DESC;",
+    const [rows] = await pool.execute(
+      "SELECT * FROM saved_designs WHERE customer_email = ? ORDER BY criado_em DESC",
       [customerEmail]
     );
 
-    // Map snake_case to camelCase for the frontend
-    const mappedDesigns = rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      model: row.model,
-      color: row.color,
-      isSunglasses: Boolean(row.is_sunglasses),
+    // Mapeia snake_case para camelCase para o frontend
+    const designs = rows.map(row => ({
+      id:             row.id,
+      name:           row.nome,
+      model:          row.modelo,
+      color:          row.cor,
+      isSunglasses:   Boolean(row.is_sunglasses),
       antiReflective: Boolean(row.anti_reflective),
-      templeStyle: row.temple_style,
-      topBar: Boolean(row.top_bar),
-      bridgeStyle: row.bridge_style,
-      frameProfile: row.frame_profile,
-      templeOpen: Number(row.temple_open),
-      published: Boolean(row.published),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      templeStyle:    row.temple_style,
+      topBar:         Boolean(row.top_bar),
+      bridgeStyle:    row.bridge_style,
+      frameProfile:   row.frame_profile,
+      templeOpen:     Number(row.temple_open),
+      published:      Boolean(row.published),
+      createdAt:      row.criado_em,
+      updatedAt:      row.atualizado_em
     }));
 
-    return res.json({ success: true, designs: mappedDesigns });
+    return res.json({ success: true, designs });
+
   } catch (err) {
-    console.error("Get designs error:", err);
-    return res.status(500).json({ success: false, error: "Failed to fetch designs from the cloud." });
+    console.error("Erro ao buscar designs:", err);
+    return res.status(500).json({ success: false, error: "Falha ao carregar designs." });
   }
 }
 
-// Delete a design
+// ─────────────────────────────────────────────────────────
+//   DELETAR DESIGN
+//   DELETE /api/designs/:id
+// ─────────────────────────────────────────────────────────
 export async function deleteDesign(req, res) {
-  const { id } = req.params;
+  const { id }       = req.params;
   const customerEmail = req.user.email;
 
   try {
-    const result = await pool.query(
-      "DELETE FROM saved_designs WHERE id = $1 AND customer_email = $2;",
+    const [result] = await pool.execute(
+      "DELETE FROM saved_designs WHERE id = ? AND customer_email = ?",
       [id, customerEmail]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, error: "Design not found or unauthorized." });
+    // affectedRows = 0 significa que não encontrou ou não pertence ao usuário
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: "Design não encontrado ou sem permissão." });
     }
 
-    return res.json({ success: true, message: "Design deleted successfully." });
+    return res.json({ success: true, message: "Design removido com sucesso." });
+
   } catch (err) {
-    console.error("Delete design error:", err);
-    return res.status(500).json({ success: false, error: "Failed to delete design." });
+    console.error("Erro ao deletar design:", err);
+    return res.status(500).json({ success: false, error: "Falha ao remover design." });
   }
 }

@@ -1,15 +1,31 @@
+// ============================================================
+//   PAYMENT ROUTES
+//   Base: /api/payments
+// ============================================================
+
 import express from "express";
-import { createBilling, getSimulatedCheckoutPage, confirmSimulatedPayment, handleWebhook } from "../controllers/paymentController.js";
-import { protect } from "../middleware/auth.js";
+import {
+  createBilling,
+  getSimulatedCheckoutPage,
+  confirmSimulatedPayment,
+  handleWebhook,
+  getPayments
+} from "../controllers/paymentController.js";
+import { protect, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Protected Routes
+// Webhook do AbacatePay (sem autenticação — chamado externamente)
+router.post("/webhook", handleWebhook);
+
+// Simulador Pix (sem autenticação — página HTML pública)
+router.get( "/simulated-checkout",        getSimulatedCheckoutPage);
+router.post("/confirm-simulated-payment", confirmSimulatedPayment);
+
+// Criar cobrança (usuário autenticado)
 router.post("/create-billing", protect, createBilling);
 
-// Unprotected Routes (used by browser redirects and webhooks)
-router.get("/simulated-checkout", getSimulatedCheckoutPage);
-router.post("/confirm-simulated-payment", confirmSimulatedPayment);
-router.post("/webhook", handleWebhook);
+// Listar todos os pagamentos (apenas staff)
+router.get("/", protect, authorize("staff"), getPayments);
 
 export default router;
