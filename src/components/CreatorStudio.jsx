@@ -1544,9 +1544,36 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
               background: tryOnMode ? "#000" : "transparent"
             }}
           >
-
-
-              {/* Subtle Corner Watermark Typography */}
+              {/* Animated Cinematic Background Orbs */}
+              {!tryOnMode && (
+                <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
+                  <div style={{
+                    position: "absolute",
+                    top: "-20%", left: "-10%",
+                    width: "70vw", height: "70vw",
+                    background: "radial-gradient(circle, rgba(162, 194, 225, 0.12) 0%, transparent 60%)",
+                    borderRadius: "50%",
+                    filter: "blur(80px)",
+                    animation: "floatOrb 20s ease-in-out infinite alternate"
+                  }} />
+                  <div style={{
+                    position: "absolute",
+                    bottom: "-30%", right: "-10%",
+                    width: "60vw", height: "60vw",
+                    background: "radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%)",
+                    borderRadius: "50%",
+                    filter: "blur(60px)",
+                    animation: "floatOrb 15s ease-in-out infinite alternate-reverse"
+                  }} />
+                  <style>{`
+                    @keyframes floatOrb {
+                      0% { transform: translate(0, 0) scale(1); }
+                      50% { transform: translate(3%, 5%) scale(1.05); }
+                      100% { transform: translate(-2%, 2%) scale(0.95); }
+                    }
+                  `}</style>
+                </div>
+              )}              {/* Subtle Corner Watermark Typography */}
               {!tryOnMode && (
                 <div 
                   className="studio-watermark"
