@@ -103,8 +103,8 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
 
   // Camera yaw/pitch target variables for smooth rotation interpolation
   const cameraAngleRef = useRef({
-    targetRadius: 7.8,
-    currentRadius: 7.8,
+    targetRadius: 5.5,
+    currentRadius: 5.5,
     targetYaw: 0.45,
     currentYaw: 0.45,
     targetPitch: 0.08,
@@ -1544,6 +1544,81 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
               background: tryOnMode ? "#000" : "transparent"
             }}
           >
+              {/* Giant Background Watermark Typography */}
+              {!tryOnMode && (
+                <div 
+                  className="studio-watermark"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    fontSize: "22vw",
+                    fontFamily: "'Playfair Display', serif",
+                    fontWeight: 900,
+                    color: "var(--text-strong)",
+                    opacity: 0.03,
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                    zIndex: 0,
+                    userSelect: "none"
+                  }}
+                >
+                  {safeModel.toUpperCase()}
+                </div>
+              )}
+
+              {/* Floating Technical Specs Panel */}
+              {!tryOnMode && (
+                <div
+                  className="studio-specs-panel"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "120px",
+                    transform: "translateY(-50%)",
+                    background: "var(--glass-card-bg)",
+                    backdropFilter: "blur(24px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                    border: "1px solid var(--glass-card-border)",
+                    borderRadius: "16px",
+                    padding: "24px",
+                    width: "240px",
+                    zIndex: 10,
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                    animation: "slideInLeftStudio 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both"
+                  }}
+                >
+                  <span style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "16px", display: "block", fontWeight: 600 }}>Technical Specs</span>
+                  
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "2px" }}>Base Material</div>
+                    <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-strong)", textTransform: "capitalize" }}>
+                      {color.includes('#6') || color.includes('#9') ? "Metal Alloy" : "Premium Acetate"}
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "2px" }}>Total Weight</div>
+                    <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-strong)" }}>
+                      {color.includes('#6') || color.includes('#9') ? "16.8g (Ultra-light)" : "22.4g (Balanced)"}
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "2px" }}>Lenses</div>
+                    <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-strong)" }}>{isSunglasses ? "UV400 Polarized" : "Clear CR-39"}</div>
+                  </div>
+                  
+                  <div>
+                    <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "2px" }}>Est. Price</div>
+                    <div style={{ fontSize: "20px", fontWeight: 600, color: "var(--primary-accent)", fontFamily: "'Playfair Display', serif" }}>
+                      ${(180 + (isSunglasses ? 40 : 0) + (frameProfile === 'bold' ? 20 : 0) + (antiReflective ? 15 : 0)).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Webcam Tracking Mode */}
               {tryOnMode && (
                 <div style={{ width: "100%", height: "100%", position: "relative" }}>

@@ -645,6 +645,57 @@ export default function Marketplace({ setView, showDesignsModal, onCloseDesignsM
             </section>
           </section>
         </main>
+
+        {/* Premium Footer */}
+        <footer className="marketplace-footer" style={{
+          marginTop: "100px",
+          padding: "80px 40px 40px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "40px",
+          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)"
+        }}>
+          <div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "28px", marginBottom: "20px" }}>OPTICUS</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.6" }}>
+              Redefining luxury eyewear through cutting-edge 3D customization and premium materials.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 600, marginBottom: "20px", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.1em" }}>Collections</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Titanium Series</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Classic Acetate</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Polarized Sun</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Limited Editions</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 600, marginBottom: "20px", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.1em" }}>Support</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Care Guide</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Warranty</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Shipping</a></li>
+              <li><a href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "14px" }}>Contact Us</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 600, marginBottom: "20px", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.1em" }}>Newsletter</h4>
+            <p style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "16px" }}>Subscribe for exclusive designs and early access.</p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input type="email" placeholder="Your email" style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#fff" }} />
+              <button className="btn primary" style={{ padding: "0 16px" }}>Join</button>
+            </div>
+          </div>
+          <div style={{ gridColumn: "1/-1", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "30px", marginTop: "20px", display: "flex", justifyContent: "space-between", color: "var(--text-muted)", fontSize: "12px", flexWrap: "wrap", gap: "10px" }}>
+            <span>&copy; {new Date().getFullYear()} OPTICUS LUXURY EYEWEAR. All rights reserved.</span>
+            <div style={{ display: "flex", gap: "20px" }}>
+              <a href="#" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Privacy Policy</a>
+              <a href="#" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Terms of Service</a>
+            </div>
+          </div>
+        </footer>
       </div>
 
       {/* Designs Modal */}

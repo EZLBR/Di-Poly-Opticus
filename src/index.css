@@ -3267,6 +3267,36 @@ body.page-create .studio-left-panel {
 body.page-marketplace {
   background: var(--bg-light) !important;
   color: var(--text-dark);
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Luxury Light Orbs for Marketplace Background */
+body.dark.page-marketplace::before,
+body.dark.page-marketplace::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+body.dark.page-marketplace::before {
+  top: -10%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(162, 194, 225, 0.4) 0%, transparent 70%);
+}
+
+body.dark.page-marketplace::after {
+  bottom: -20%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
 }
 
 /* Premium Dark Gradient Hero */
