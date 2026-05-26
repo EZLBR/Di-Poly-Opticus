@@ -1546,6 +1546,30 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
           >
 
 
+              {/* Subtle Corner Watermark Typography */}
+              {!tryOnMode && (
+                <div 
+                  className="studio-watermark"
+                  style={{
+                    position: "absolute",
+                    bottom: "-2vw",
+                    right: "2vw",
+                    fontSize: "12vw",
+                    fontFamily: "'Playfair Display', serif",
+                    fontWeight: 900,
+                    color: "var(--text-strong)",
+                    opacity: 0.04,
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                    zIndex: 0,
+                    userSelect: "none",
+                    letterSpacing: "-0.02em"
+                  }}
+                >
+                  {safeModel.toUpperCase()}
+                </div>
+              )}
+
               {/* Floating Technical Specs Panel */}
               {!tryOnMode && (
                 <div
