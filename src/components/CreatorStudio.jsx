@@ -1544,29 +1544,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
               background: tryOnMode ? "#000" : "transparent"
             }}
           >
-              {/* Giant Background Watermark Typography */}
-              {!tryOnMode && (
-                <div 
-                  className="studio-watermark"
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    fontSize: "22vw",
-                    fontFamily: "'Playfair Display', serif",
-                    fontWeight: 900,
-                    color: "var(--text-strong)",
-                    opacity: 0.03,
-                    pointerEvents: "none",
-                    whiteSpace: "nowrap",
-                    zIndex: 0,
-                    userSelect: "none"
-                  }}
-                >
-                  {safeModel.toUpperCase()}
-                </div>
-              )}
+
 
               {/* Floating Technical Specs Panel */}
               {!tryOnMode && (
