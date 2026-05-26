@@ -3567,3 +3567,76 @@ body.dark select.premium-select:focus {
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
 }
 
+/* --- PHASE 4: PREMIUM MODAL (MY DESIGNS) --- */
+.modal {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.6) !important;
+}
+
+.modal-card {
+  background: var(--glass-card-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--glass-card-border) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.3) !important;
+  color: var(--text-dark);
+}
+
+body.dark .modal-card {
+  background: rgba(17, 24, 39, 0.75) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #fff;
+}
+
+.modal-head {
+  padding: 24px 30px !important;
+  border-bottom: 1px solid var(--glass-card-border) !important;
+}
+
+.modal-head h3 {
+  font-family: 'Playfair Display', serif !important;
+  font-size: 20px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  color: var(--primary-accent) !important;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.modal-body {
+  padding: 10px 30px 30px !important;
+}
+
+.design-row {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--glass-card-border) !important;
+  border-radius: 12px;
+  padding: 16px 20px !important;
+  margin-top: 16px;
+  transition: all 0.3s ease;
+}
+
+.design-row:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-2px);
+  border-color: var(--primary-accent) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.design-row strong {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 16px !important;
+}
+
