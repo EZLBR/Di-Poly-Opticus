@@ -155,22 +155,22 @@ export async function initializeDatabase() {
     // ── TABELA: saved_designs ─────────────────────────────
     await pool.query(`
       CREATE TABLE IF NOT EXISTS saved_designs (
-        id              SERIAL PRIMARY KEY,
+        id              VARCHAR(255)  PRIMARY KEY,
         usuario_id      INT           NOT NULL,
         customer_email  VARCHAR(255)  NOT NULL,
-        nome            VARCHAR(255)  NOT NULL,
-        modelo          VARCHAR(255)  NOT NULL,
-        cor             VARCHAR(50)   NOT NULL,
+        name            VARCHAR(255)  NOT NULL,
+        model           VARCHAR(255)  NOT NULL,
+        color           VARCHAR(50)   NOT NULL,
         is_sunglasses   BOOLEAN       DEFAULT FALSE,
         anti_reflective BOOLEAN       DEFAULT FALSE,
         temple_style    VARCHAR(50)   DEFAULT 'standard',
         top_bar         BOOLEAN       DEFAULT FALSE,
         bridge_style    VARCHAR(50)   DEFAULT 'keyhole',
         frame_profile   VARCHAR(50)   DEFAULT 'medium',
-        temple_open     DECIMAL(4,2)  DEFAULT 0.00,
+        temple_open     NUMERIC       DEFAULT 0.00,
         published       BOOLEAN       DEFAULT FALSE,
-        criado_em       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+        created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+        updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_design_usuario
           FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
       )

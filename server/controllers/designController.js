@@ -23,42 +23,45 @@ export async function saveDesign(req, res) {
     return res.status(400).json({ success: false, error: "Nome, modelo e cor são obrigatórios." });
   }
 
+  // Handle ID. If frontend sends null (because of new fix), generate a design ID
+  const finalId = id || `design-${Date.now()}`;
+
   try {
     if (id) {
       const { rows: existing } = await pool.query(
         "SELECT id FROM saved_designs WHERE id = $1 AND customer_email = $2",
-        [id, customerEmail]
+        [finalId, customerEmail]
       );
 
       if (existing.length > 0) {
         await pool.query(
           `UPDATE saved_designs SET
-            nome = $1, modelo = $2, cor = $3,
+            name = $1, model = $2, color = $3,
             is_sunglasses = $4, anti_reflective = $5, temple_style = $6,
             top_bar = $7, bridge_style = $8, frame_profile = $9,
-            temple_open = $10, published = $11, atualizado_em = CURRENT_TIMESTAMP
+            temple_open = $10, published = $11, updated_at = CURRENT_TIMESTAMP
            WHERE id = $12 AND customer_email = $13`,
           [
             name, model, color,
             Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
             Boolean(top_bar), bridge_style || "keyhole", frame_profile || "medium",
             temple_open || 0.00, Boolean(published),
-            id, customerEmail
+            finalId, customerEmail
           ]
         );
 
-        return res.json({ success: true, message: "Design atualizado com sucesso." });
+        return res.json({ success: true, message: "Design atualizado com sucesso.", id: finalId });
       }
     }
 
     const { rows: result } = await pool.query(
       `INSERT INTO saved_designs
-        (usuario_id, customer_email, nome, modelo, cor,
+        (id, usuario_id, customer_email, name, model, color,
          is_sunglasses, anti_reflective, temple_style,
          top_bar, bridge_style, frame_profile, temple_open, published)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
       [
-        usuarioId, customerEmail, name, model, color,
+        finalId, usuarioId, customerEmail, name, model, color,
         Boolean(is_sunglasses), Boolean(anti_reflective), temple_style || "standard",
         Boolean(top_bar), bridge_style || "keyhole", frame_profile || "medium",
         temple_open || 0.00, Boolean(published)
@@ -86,15 +89,15 @@ export async function getDesigns(req, res) {
 
   try {
     const { rows } = await pool.query(
-      "SELECT * FROM saved_designs WHERE customer_email = $1 ORDER BY criado_em DESC",
+      "SELECT * FROM saved_designs WHERE customer_email = $1 ORDER BY created_at DESC",
       [customerEmail]
     );
 
     const designs = rows.map(row => ({
       id:             row.id,
-      name:           row.nome,
-      model:          row.modelo,
-      color:          row.cor,
+      name:           row.name,
+      model:          row.model,
+      color:          row.color,
       isSunglasses:   Boolean(row.is_sunglasses),
       antiReflective: Boolean(row.anti_reflective),
       templeStyle:    row.temple_style,
@@ -103,8 +106,8 @@ export async function getDesigns(req, res) {
       frameProfile:   row.frame_profile,
       templeOpen:     Number(row.temple_open),
       published:      Boolean(row.published),
-      createdAt:      row.criado_em,
-      updatedAt:      row.atualizado_em
+      createdAt:      row.created_at,
+      updatedAt:      row.updated_at
     }));
 
     return res.json({ success: true, designs });
