@@ -17,8 +17,12 @@ const filterOrdersByTime = (orders, timeRange) => {
   const currentYearStr = todayStr.substring(0, 4); // YYYY
 
   return orders.filter(o => {
-    const d = o.createdAt;
+    let d = o.createdAt;
     if (!d) return true;
+    
+    // Convert '2026-05-27T00:00:00.000Z' to '2026-05-27'
+    d = d.split("T")[0];
+    
     if (timeRange === "day") return d === todayStr;
     if (timeRange === "month") return d.startsWith(currentMonthStr);
     if (timeRange === "year") return d.startsWith(currentYearStr);
@@ -37,7 +41,7 @@ export function FactoryDashboard() {
   const [currency, setCurrency] = useState("USD");
   const { rate, symbol } = CURRENCY_RATES[currency] || CURRENCY_RATES.USD;
 
-  const allFactoryOrders = orders.filter((o) => o.factoryId === session.id);
+  const allFactoryOrders = orders.filter((o) => String(o.factoryId) === String(session.id));
   const factoryOrders = filterOrdersByTime(allFactoryOrders, timeRange);
 
   const handleStatusChange = (orderId, newStatus) => {
@@ -63,7 +67,7 @@ export function FactoryDashboard() {
   // 3. Calculate Area Chart (Revenue over time)
   const dateMap = {};
   factoryOrders.forEach(o => {
-    const d = o.createdAt || "Recent";
+    const d = o.createdAt ? o.createdAt.split("T")[0] : "Recent";
     if (!dateMap[d]) dateMap[d] = 0;
     dateMap[d] += (Number(o.total) * rate);
   });
