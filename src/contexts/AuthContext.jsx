@@ -426,7 +426,7 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         if (res.ok && data.success) {
           fetchBackendDesigns(token);
-          return true;
+          return data;
         }
       } catch (e) {
         console.error("Backend save design failed:", e);

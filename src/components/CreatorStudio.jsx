@@ -1269,10 +1269,11 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
 
       const savedRaw = localStorage.getItem("opticus_designs") || "[]";
       const designs = JSON.parse(savedRaw);
-      const activeDesignId = !isNew && designs[parseInt(activeIndex, 10)] ? designs[parseInt(activeIndex, 10)].id : `design-${Date.now()}`;
+      const activeDesignId = !isNew && designs[parseInt(activeIndex, 10)] ? designs[parseInt(activeIndex, 10)].id : null;
+      let finalId = activeDesignId || `design-${Date.now()}`;
 
       const newDesign = {
-        id: activeDesignId,
+        id: finalId,
         name: cleanName,
         model,
         color,
@@ -1290,8 +1291,10 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       };
 
       if (isBackendConnected) {
-        await saveBackendDesign({
-          id: newDesign.id,
+        const isLocalStringId = typeof finalId === "string" && finalId.startsWith("design-");
+        
+        const backendRes = await saveBackendDesign({
+          id: isLocalStringId ? null : finalId,
           name: newDesign.name,
           model: newDesign.model,
           color: newDesign.color,
@@ -1304,6 +1307,12 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
           temple_open: newDesign.templeOpen,
           published: newDesign.published
         });
+
+        // Catch the real integer ID assigned by PostgreSQL
+        if (backendRes && backendRes.id) {
+          finalId = backendRes.id;
+          newDesign.id = finalId;
+        }
       }
 
       if (isNew) {
