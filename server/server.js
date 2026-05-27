@@ -38,6 +38,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     // Permite qualquer subdomínio do Vercel durante preview deploys
     if (origin.endsWith(".vercel.app")) return callback(null, true);
+    // Permite o próprio Render (para a tela de simulação de pagamento bater nela mesma)
+    if (origin.endsWith(".onrender.com")) return callback(null, true);
     // Verifica lista de origens permitidas
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS bloqueado para origem: ${origin}`));
