@@ -48,23 +48,30 @@ const OrderContextMenu = ({ menu, onClose, onUpdateStatus, onViewDetails }) => {
   if (!menu) return null;
   const statuses = ["Queued", "In production", "Delivered"];
   
+  // Calcula se o menu vai vazar a tela para baixo (assumindo altura ~200px)
+  const isTooLow = menu.y > window.innerHeight - 200;
+  
   return (
     <>
       <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
       <div className="premium-glass-card context-menu" style={{
-        position: "fixed", top: menu.y, left: menu.x, zIndex: 9999,
+        position: "fixed", 
+        top: isTooLow ? 'auto' : menu.y, 
+        bottom: isTooLow ? (window.innerHeight - menu.y) : 'auto',
+        left: menu.x, 
+        zIndex: 9999,
         padding: "10px", borderRadius: "8px", minWidth: "180px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)"
+        boxShadow: "0 10px 30px rgba(0,0,0,0.2)", border: "1px solid var(--border-color)"
       }}>
-        <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: "8px" }}>
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--border-color)", marginBottom: "8px" }}>
           <strong style={{ fontSize: "12px", color: "var(--color-hint)" }}>Pedido #{menu.order.id}</strong>
         </div>
-        <button className="menu-btn" onClick={() => { onViewDetails(menu.order); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#fff", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
+        <button className="menu-btn hoverable-row" onClick={() => { onViewDetails(menu.order); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: "var(--text-color)", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
           <Info size={14} /> Ver Detalhes
         </button>
         <div style={{ padding: "8px 12px", fontSize: "11px", color: "var(--color-hint)", textTransform: "uppercase", marginTop: "4px" }}>Alterar Status</div>
         {statuses.map(s => (
-          <button key={s} className="menu-btn" onClick={() => { onUpdateStatus(menu.order.id, s); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: s === menu.order.status ? "var(--primary-accent)" : "#fff", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
+          <button key={s} className="menu-btn hoverable-row" onClick={() => { onUpdateStatus(menu.order.id, s); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: s === menu.order.status ? "var(--primary-accent)" : "var(--text-color)", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
             {s === menu.order.status ? <CheckCircle size={14} /> : <ChevronRight size={14} />} {s}
           </button>
         ))}
