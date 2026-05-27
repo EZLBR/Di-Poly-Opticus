@@ -4,14 +4,19 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { CartProvider } from './contexts/CartContext'
+import { OrderProvider } from './contexts/OrderContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <LanguageProvider>
-        <App />
-      </LanguageProvider>
+      <OrderProvider>
+        <CartProvider>
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
+        </CartProvider>
+      </OrderProvider>
     </AuthProvider>
   </StrictMode>,
 )
-

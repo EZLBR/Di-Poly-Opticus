@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { 
   Camera, 
@@ -34,7 +35,8 @@ const CURATED_COLORS = [
 ];
 
 export default function CreatorStudio({ setView, onOpenDesigns }) {
-  const { session, placeOrder, saveBackendDesign, isBackendConnected } = useAuth();
+  const { session, designs, saveDesign, isBackendConnected } = useAuth();
+  const { addToCart } = useCart();
   const { t, language } = useTranslation();
 
   // --- Step navigation ---

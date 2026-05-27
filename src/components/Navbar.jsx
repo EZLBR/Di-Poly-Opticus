@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Moon, Sun, Globe, LogOut } from "lucide-react";
 
 export default function Navbar({ currentView, setView }) {
-  const { session, logout, cart } = useAuth();
-  const { language, setLanguage, t } = useTranslation();
+  const { session, logout } = useAuth();
+  const { cart } = useCart();
+  const { t, language, setLanguage } = useTranslation();
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem("opticus_theme") === "dark";
   });

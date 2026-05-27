@@ -1,94 +1,93 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
-import Marketplace from "./components/Marketplace";
-import CreatorStudio from "./components/CreatorStudio";
-import DesignsGallery from "./components/DesignsGallery";
-import AuthPage from "./components/AuthPage";
-import { FactoryDashboard, StaffDashboard } from "./components/Dashboards";
-import Cart from "./components/Cart";
 import { useTranslation } from "./contexts/LanguageContext";
 import { Check, X } from "lucide-react";
+import { FactoryDashboard, StaffDashboard } from "./components/Dashboards";
 
-function App() {
-  const [view, setView] = useState("marketplace");
+// Lazy Loading para os componentes pesados
+const Marketplace = lazy(() => import("./components/Marketplace"));
+const CreatorStudio = lazy(() => import("./components/CreatorStudio"));
+const DesignsGallery = lazy(() => import("./components/DesignsGallery"));
+const AuthPage = lazy(() => import("./components/AuthPage"));
+const Cart = lazy(() => import("./components/Cart"));
+
+function AppContent() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const { session, clearCart } = useAuth();
   const { language } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Check for successful payment return redirect
+  // Verifica redirecionamento de pagamento
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     if (params.get("payment") === "success") {
       setShowPaymentSuccess(true);
-      clearCart(); // Esvazia o carrinho de compras automaticamente
-      // Clean query parameter from URL without page reload
-      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-      window.history.replaceState({ path: newUrl }, "", newUrl);
+      clearCart();
+      navigate(location.pathname, { replace: true });
     }
-  }, []);
+  }, [location.search, navigate, clearCart, location.pathname]);
 
-  // If role changes, or user logs out, redirect to safe view
+  // Controle de permissões (Roles) e proteção de rotas
   useEffect(() => {
     if (!session) {
-      // If logged out and on a dashboard, go back to marketplace
-      if (view === "factory-dashboard" || view === "staff-dashboard") {
-        setView("marketplace");
+      if (location.pathname === "/factory-dashboard" || location.pathname === "/staff-dashboard") {
+        navigate("/");
       }
     } else {
-      // If logged in as factory, force dashboard redirection
-      if (session.role === "factory" && view !== "factory-dashboard") {
-        setView("factory-dashboard");
+      if (session.role === "factory" && location.pathname !== "/factory-dashboard") {
+        navigate("/factory-dashboard");
       }
-      // If logged in as staff, direct to staff-dashboard by default if they try to access factory
-      if (session.role === "staff" && view === "factory-dashboard") {
-        setView("staff-dashboard");
+      if (session.role === "staff" && location.pathname === "/factory-dashboard") {
+        navigate("/staff-dashboard");
       }
     }
-  }, [session, view]);
+  }, [session, location.pathname, navigate]);
 
-  // Synchronize body classes for premium background styling
+  // Aplica classes visuais no body dependendo da rota
   useEffect(() => {
     document.body.classList.remove("page-marketplace", "page-create");
-    if (view === "marketplace" || view === "login" || view === "factory-dashboard" || view === "staff-dashboard" || view === "cart" || view === "designs") {
-      document.body.classList.add("page-marketplace");
-    } else if (view === "create") {
+    if (location.pathname === "/create") {
       document.body.classList.add("page-create");
+    } else {
+      document.body.classList.add("page-marketplace");
     }
-  }, [view]);
+  }, [location.pathname]);
 
-  const renderContent = () => {
-    switch (view) {
-      case "marketplace":
-        return <Marketplace setView={setView} />;
-      case "designs":
-        return <DesignsGallery setView={setView} />;
-      case "create":
-        return <CreatorStudio setView={setView} />;
-      case "cart":
-        return <Cart setView={setView} />;
-      case "login":
-        return <AuthPage setView={setView} />;
-      case "factory-dashboard":
-        return <FactoryDashboard />;
-      case "staff-dashboard":
-        return <StaffDashboard />;
-      default:
-        return <Marketplace setView={setView} />;
-    }
+  // Função legado de compatibilidade para os componentes que ainda esperam `setView`
+  const setViewLegacy = (viewName) => {
+    if (viewName === "marketplace") navigate("/");
+    else navigate(`/${viewName}`);
   };
+
+  const currentView = location.pathname.substring(1) || "marketplace";
 
   return (
     <div className="app-container">
-      <Navbar
-        currentView={view}
-        setView={setView}
-      />
+      <Navbar currentView={currentView} setView={setViewLegacy} />
+      
       <main className="main-content">
-        {renderContent()}
+        <Suspense fallback={
+          <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', color:'rgba(255,255,255,0.5)', fontFamily:'var(--font-primary)'}}>
+            Carregando interface...
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Marketplace setView={setViewLegacy} />} />
+            <Route path="/designs" element={<DesignsGallery setView={setViewLegacy} />} />
+            <Route path="/create" element={<CreatorStudio setView={setViewLegacy} />} />
+            <Route path="/cart" element={<Cart setView={setViewLegacy} />} />
+            <Route path="/login" element={<AuthPage setView={setViewLegacy} />} />
+            <Route path="/factory-dashboard" element={<FactoryDashboard />} />
+            <Route path="/staff-dashboard" element={<StaffDashboard />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
 
-      {/* Payment Success Glassmorphic Modal */}
+      {/* Modal Glassmorphic de Sucesso de Pagamento */}
       {showPaymentSuccess && (
         <div className="modal open" style={{ zIndex: 9999, background: "rgba(10, 15, 26, 0.75)", backdropFilter: "blur(12px)" }}>
           <div className="modal-card" style={{ maxWidth: "480px", background: "rgba(22, 27, 34, 0.95)", border: "1px solid rgba(240, 246, 252, 0.1)", borderRadius: "16px" }}>
@@ -143,5 +142,10 @@ function App() {
   );
 }
 
-export default App;
-
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}

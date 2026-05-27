@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useOrder } from "../contexts/OrderContext";
+import { useTranslation } from "../contexts/LanguageContext";
 import { ShoppingBag, Users, Building, ShieldCheck, DollarSign, Clock, Info, CheckCircle, ChevronRight, Settings } from "lucide-react";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
@@ -118,7 +120,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
 };
 
 export function FactoryDashboard() {
-  const { session, orders, updateOrderStatus } = useAuth();
+  const { session } = useAuth();
+  const { orders, fetchBackendOrders, updateOrderStatus } = useOrder();
+  const { t } = useTranslation();
   
   if (!session || session.role !== "factory") {
     return <p>Access denied.</p>;
@@ -347,7 +351,8 @@ export function FactoryDashboard() {
 }
 
 export function StaffDashboard() {
-  const { session, orders: allStaffOrders, users, updateOrderStatus } = useAuth();
+  const { session, users } = useAuth();
+  const { orders: allStaffOrders, updateOrderStatus } = useOrder();
 
   if (!session || session.role !== "staff") {
     return <p>Access denied.</p>;
