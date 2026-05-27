@@ -41,7 +41,8 @@ export async function createBilling(req, res) {
 
       await _registrarPagamento(orderId, "pix", "pendente", Number(order.total), mockBillingId);
 
-      const mockCheckoutUrl = `http://localhost:${PORT}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}`;
+      const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
+      const mockCheckoutUrl = `${frontendOrigin}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}`;
 
       return res.json({ success: true, checkoutUrl: mockCheckoutUrl, isSimulated: true });
     }
@@ -56,8 +57,8 @@ export async function createBilling(req, res) {
         frequency:     "ONE_TIME",
         methods:       ["PIX"],
         products:      [{ externalId: String(order.id), name: order.product_name, quantity: 1, price: amountInCents }],
-        returnUrl:     "http://localhost:5173",
-        completionUrl: "http://localhost:5173",
+        returnUrl:     `${frontendOrigin}/`,
+        completionUrl: `${frontendOrigin}/`,
         customer:      { name: order.customer_name, email: order.customer_email, taxId: "00000000000" }
       })
     });
@@ -90,7 +91,7 @@ export async function createBilling(req, res) {
       [fallbackId, orderId]
     );
 
-    const fallbackUrl = `http://localhost:${PORT}/api/payments/simulated-checkout?billingId=${fallbackId}&orderId=${orderId}`;
+    const fallbackUrl = `${frontendOrigin}/api/payments/simulated-checkout?billingId=${fallbackId}&orderId=${orderId}`;
 
     return res.json({ success: true, checkoutUrl: fallbackUrl, isSimulated: true, notice: "Fallback para simulador." });
   }
@@ -287,10 +288,12 @@ export async function confirmSimulatedPayment(req, res) {
 
     console.log(`[Simulador] Pagamento confirmado! Cobrança \${billingId} → Fila de Produção.`);
 
-    const referer     = req.headers.referer || "http://localhost:5174";
-    const redirectUrl = referer.includes("5173")
-      ? "http://localhost:5173/?payment=success"
-      : "http://localhost:5174/?payment=success";
+    let redirectUrl = "http://localhost:5173/?payment=success";
+    if (req.headers.origin) {
+      redirectUrl = `${req.headers.origin}/?payment=success`;
+    } else if (req.headers.referer) {
+      redirectUrl = `${new URL(req.headers.referer).origin}/?payment=success`;
+    }
 
     return res.redirect(redirectUrl);
 
