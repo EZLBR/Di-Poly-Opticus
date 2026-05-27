@@ -225,17 +225,17 @@ export async function checkoutCart(req, res) {
   const usuarioId     = req.user.id;
   const consolidatedBillingId = `bill-sim-${Math.floor(100000 + Math.random() * 900000)}`;
 
+  const client = await pool.connect();
+  let createdOrders = [];
   try {
-    const createdOrders = [];
+    await client.query("BEGIN");
+    let finalFactoryIdCache = null;
 
     for (const item of cartItems) {
       const { productName, factoryId, factoryName, total, customSpecs, quantity } = item;
 
       if (!productName || !factoryId || !factoryName || !total || !customSpecs) {
-        return res.status(400).json({
-          success: false,
-          error: "Parâmetros faltando em um dos itens do carrinho."
-        });
+        throw new Error("Parâmetros faltando em um dos itens do carrinho.");
       }
 
       const specsWithQty    = { ...customSpecs, quantity: quantity || 1 };
@@ -243,11 +243,14 @@ export async function checkoutCart(req, res) {
 
       let finalFactoryId = Number(factoryId);
       if (isNaN(finalFactoryId)) {
-        const { rows: fRows } = await pool.query("SELECT id FROM usuarios WHERE role = 'factory' LIMIT 1");
-        finalFactoryId = fRows.length > 0 ? fRows[0].id : null;
+        if (!finalFactoryIdCache) {
+          const { rows: fRows } = await client.query("SELECT id FROM usuarios WHERE role = 'factory' LIMIT 1");
+          finalFactoryIdCache = fRows.length > 0 ? fRows[0].id : null;
+        }
+        finalFactoryId = finalFactoryIdCache;
       }
 
-      const { rows: result } = await pool.query(
+      const { rows: result } = await client.query(
         `INSERT INTO pedidos
          (usuario_id, customer_name, customer_email, product_name,
           factory_id, factory_name, total, custom_specs, status, abacate_billing_id)
@@ -273,6 +276,13 @@ export async function checkoutCart(req, res) {
         factoryName
       });
     }
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    client.release();
+    return res.status(400).json({ success: false, error: err.message });
+  }
+  client.release();
 
     const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
     const backendProto = req.headers['x-forwarded-proto'] || req.protocol;

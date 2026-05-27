@@ -20,7 +20,7 @@ router.post("/webhook", handleWebhook);
 
 // Simulador Pix (sem autenticação — página HTML pública)
 router.get( "/simulated-checkout",        getSimulatedCheckoutPage);
-router.post("/confirm-simulated-payment", confirmSimulatedPayment);
+router.post("/confirm-simulated-payment", protect, confirmSimulatedPayment);
 
 // Criar cobrança (usuário autenticado)
 router.post("/create-billing", protect, createBilling);

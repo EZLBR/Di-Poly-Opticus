@@ -3,7 +3,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || "opticus_premium_jwt_secret_key_2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not set in environment.");
+  process.exit(1);
+}
 
 export function protect(req, res, next) {
   const authHeader = req.headers.authorization;

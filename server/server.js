@@ -7,15 +7,18 @@ import express  from "express";
 import cors     from "cors";
 import dotenv   from "dotenv";
 import { initializeDatabase } from "./config/db.js";
+import helmet   from "helmet";
+import rateLimit from "express-rate-limit";
+import xss      from "xss-clean";
 
 // ── Importação de Rotas ──────────────────────────────────
 import authRoutes     from "./routes/authRoutes.js";
 import orderRoutes    from "./routes/orderRoutes.js";
 import paymentRoutes  from "./routes/paymentRoutes.js";
 import designRoutes   from "./routes/designRoutes.js";
-import productRoutes  from "./routes/productRoutes.js";    // ← NOVO
-import categoryRoutes from "./routes/categoryRoutes.js";  // ← NOVO
-import stockRoutes    from "./routes/stockRoutes.js";     // ← NOVO
+import productRoutes  from "./routes/productRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import stockRoutes    from "./routes/stockRoutes.js";
 
 dotenv.config();
 
@@ -47,8 +50,26 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Segurança e Sanitização
+app.use(helmet());
+app.use(xss());
+
+// Limite de Requisições (Rate Limiting)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // Limite de 100 requisições por IP
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
+app.use("/api/auth/login", rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15, // Apenas 15 tentativas de login por IP
+  message: "Too many login attempts, please try again later",
+}));
+app.use("/api", limiter);
+
+// Prevenção contra Payloads gigantes
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Logger de requisições
 app.use((req, _res, next) => {

@@ -6,6 +6,16 @@
 
 import pool from "../config/db.js";
 
+// Security Helper
+const escapeHTML = (str) => {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 const ABACATE_TOKEN = process.env.ABACATE_TOKEN;
 const PORT          = process.env.PORT || 5000;
 
@@ -30,6 +40,9 @@ export async function createBilling(req, res) {
     const order           = rows[0];
     const amountInCents   = Math.round(Number(order.total) * 100);
     const isMockToken     = !ABACATE_TOKEN || ABACATE_TOKEN.includes("your_abacatepay_token_here");
+    const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
+    const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
+    const backendOrigin = `${backendProto}://${req.get("host")}`;
 
     if (isMockToken) {
       const mockBillingId  = `bill-sim-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -39,9 +52,6 @@ export async function createBilling(req, res) {
         [mockBillingId, orderId]
       );
 
-      const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
-      const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
-      const backendOrigin = `${backendProto}://${req.get("host")}`;
       const mockCheckoutUrl = `${backendOrigin}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}&returnTo=${encodeURIComponent(frontendOrigin)}`;
 
       return res.json({ success: true, checkoutUrl: mockCheckoutUrl, isSimulated: true });
@@ -208,13 +218,8 @@ export async function getSimulatedCheckoutPage(req, res) {
     const totalAmount    = orders.reduce((sum, o) => sum + Number(o.total), 0);
     const customerName   = orders[0].customer_name;
     const customerEmail  = orders[0].customer_email;
-
-    const itemsHtml = orders.map(o => `
-      <div class="detail-row">
-        <span>${o.product_name}:</span>
-        <strong>R$ ${Number(o.total).toFixed(2)}</strong>
-      </div>
-    `).join("");
+    const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
+    const backendOrigin = `${backendProto}://${req.get("host")}`;
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -247,13 +252,18 @@ export async function getSimulatedCheckoutPage(req, res) {
     <p class="hint">Aponte o celular para o QR Code ou simule o pagamento clicando abaixo.</p>
     <div class="order-details">
       <h4 style="margin:0 0 10px;font-size:13px;text-transform:uppercase;color:#22c55e">Itens:</h4>
-      ${itemsHtml}
-      <div class="detail-row"><span>Cobrança:</span><strong style="font-size:11px;color:#8b949e">${billingId}</strong></div>
-      <div class="detail-row"><span>Cliente:</span><strong>${customerName} (${customerEmail})</strong></div>
+      ${orders.map(o => `
+        <div class="detail-row">
+          <span>${escapeHTML(o.product_name)}:</span>
+          <strong>R$ ${Number(o.total).toFixed(2)}</strong>
+        </div>
+      `).join("")}
+      <div class="detail-row"><span>Cobrança:</span><strong style="font-size:11px;color:#8b949e">${escapeHTML(billingId)}</strong></div>
+      <div class="detail-row"><span>Cliente:</span><strong>${escapeHTML(customerName)} (${escapeHTML(customerEmail)})</strong></div>
     </div>
-    <form action="/api/payments/confirm-simulated-payment" method="POST">
-      <input type="hidden" name="billingId" value="${billingId}" />
-      <input type="hidden" name="returnTo" value="${returnTo || 'http://localhost:5173'}" />
+    <form action="${backendOrigin}/api/payments/confirm-simulated-payment" method="POST">
+      <input type="hidden" name="billingId" value="${escapeHTML(billingId)}" />
+      <input type="hidden" name="returnTo" value="${escapeHTML(returnTo || 'http://localhost:5173')}" />
       <button type="submit" class="btn">Simular Pagamento Pix</button>
     </form>
   </div>

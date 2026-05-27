@@ -29,7 +29,7 @@ export async function createProduct(req, res) {
 
   try {
     // 1. Insere o produto
-    const [result] = await pool.execute(
+    const { rows:  } = await pool.query(
       `INSERT INTO produtos (nome, descricao, preco, categoria_id, imagem_url, ativo)
        VALUES (?, ?, ?, ?, ?, TRUE)`,
       [
@@ -44,17 +44,17 @@ export async function createProduct(req, res) {
     const produtoId = result.insertId;
 
     // 2. Cria o registro de estoque automaticamente (começa em 0)
-    await pool.execute(
+    await pool.query(
       "INSERT INTO estoque (produto_id, quantidade, estoque_minimo) VALUES (?, 0, 5)",
       [produtoId]
     );
 
     // 3. Retorna o produto recém-criado
-    const [rows] = await pool.execute(
+    const { rows:  } = await pool.query(
       `SELECT p.*, c.nome AS categoria_nome
        FROM produtos p
        LEFT JOIN categorias c ON c.id = p.categoria_id
-       WHERE p.id = ?`,
+       WHERE p.id = $1`,
       [produtoId]
     );
 
@@ -96,7 +96,7 @@ export async function getProducts(req, res) {
     //     pois mysql2 prepared statements têm bugs com LIMIT/OFFSET
     //     como parâmetros em algumas versões do MySQL 8/9.
     //     São seguros pois já foram validados como inteiros acima.
-    const [rows] = await pool.query(
+    const { rows:  } = await pool.query(
       `SELECT
         p.id,
         p.nome,
@@ -118,7 +118,7 @@ export async function getProducts(req, res) {
     );
 
     // Total de registros para paginação no frontend
-    const [countRows] = await pool.query(
+    const { rows:  } = await pool.query(
       `SELECT COUNT(*) AS total FROM produtos p ${where}`,
       params
     );
@@ -145,7 +145,7 @@ export async function getProductById(req, res) {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.execute(
+    const { rows:  } = await pool.query(
       `SELECT
         p.*,
         c.nome AS categoria_nome,
@@ -154,7 +154,7 @@ export async function getProductById(req, res) {
        FROM produtos p
        LEFT JOIN categorias c ON c.id = p.categoria_id
        LEFT JOIN estoque    e ON e.produto_id = p.id
-       WHERE p.id = ?`,
+       WHERE p.id = $1`,
       [id]
     );
 
@@ -183,10 +183,10 @@ export async function updateProduct(req, res) {
   }
 
   try {
-    const [result] = await pool.execute(
+    const { rows:  } = await pool.query(
       `UPDATE produtos
-       SET nome = ?, descricao = ?, preco = ?, categoria_id = ?, imagem_url = ?, ativo = ?
-       WHERE id = ?`,
+       SET nome = $1, descricao = $2, preco = $3, categoria_id = $4, imagem_url = $5, ativo = $6
+       WHERE id = $7`,
       [
         nome.trim(),
         descricao || null,
@@ -203,8 +203,8 @@ export async function updateProduct(req, res) {
     }
 
     // Retorna o produto atualizado
-    const [rows] = await pool.execute(
-      "SELECT * FROM produtos WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "SELECT * FROM produtos WHERE id = $1",
       [id]
     );
 
@@ -226,8 +226,8 @@ export async function deleteProduct(req, res) {
 
   try {
     // Verifica se o produto existe
-    const [rows] = await pool.execute(
-      "SELECT id FROM produtos WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "SELECT id FROM produtos WHERE id = $1",
       [id]
     );
 
@@ -237,8 +237,8 @@ export async function deleteProduct(req, res) {
 
     // Soft delete: apenas desativa o produto em vez de deletar
     // Isso preserva o histórico em pedidos_itens
-    await pool.execute(
-      "UPDATE produtos SET ativo = FALSE WHERE id = ?",
+    await pool.query(
+      "UPDATE produtos SET ativo = FALSE WHERE id = $1",
       [id]
     );
 

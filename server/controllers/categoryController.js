@@ -18,8 +18,8 @@ export async function createCategory(req, res) {
 
   try {
     // Verifica se já existe uma categoria com esse nome
-    const [existing] = await pool.execute(
-      "SELECT id FROM categorias WHERE nome = ?",
+    const { rows:  } = await pool.query(
+      "SELECT id FROM categorias WHERE nome = $1",
       [nome.trim()]
     );
 
@@ -27,13 +27,13 @@ export async function createCategory(req, res) {
       return res.status(400).json({ success: false, error: "Já existe uma categoria com esse nome." });
     }
 
-    const [result] = await pool.execute(
+    const { rows:  } = await pool.query(
       "INSERT INTO categorias (nome, descricao) VALUES (?, ?)",
       [nome.trim(), descricao || null]
     );
 
-    const [rows] = await pool.execute(
-      "SELECT * FROM categorias WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "SELECT * FROM categorias WHERE id = $1",
       [result.insertId]
     );
 
@@ -52,7 +52,7 @@ export async function createCategory(req, res) {
 export async function getCategories(req, res) {
   try {
     // LEFT JOIN + COUNT para mostrar quantos produtos há em cada categoria
-    const [rows] = await pool.execute(
+    const { rows:  } = await pool.query(
       `SELECT
         c.id,
         c.nome,
@@ -82,8 +82,8 @@ export async function getCategoryById(req, res) {
 
   try {
     // Categoria
-    const [catRows] = await pool.execute(
-      "SELECT * FROM categorias WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "SELECT * FROM categorias WHERE id = $1",
       [id]
     );
 
@@ -92,8 +92,8 @@ export async function getCategoryById(req, res) {
     }
 
     // Produtos desta categoria
-    const [prodRows] = await pool.execute(
-      "SELECT id, nome, preco, imagem_url, ativo FROM produtos WHERE categoria_id = ? AND ativo = TRUE",
+    const { rows:  } = await pool.query(
+      "SELECT id, nome, preco, imagem_url, ativo FROM produtos WHERE categoria_id = $1 AND ativo = TRUE",
       [id]
     );
 
@@ -121,8 +121,8 @@ export async function updateCategory(req, res) {
   }
 
   try {
-    const [result] = await pool.execute(
-      "UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "UPDATE categorias SET nome = $1, descricao = $2 WHERE id = $3",
       [nome.trim(), descricao || null, id]
     );
 
@@ -130,7 +130,7 @@ export async function updateCategory(req, res) {
       return res.status(404).json({ success: false, error: "Categoria não encontrada." });
     }
 
-    const [rows] = await pool.execute("SELECT * FROM categorias WHERE id = ?", [id]);
+    const { rows:  } = await pool.query("SELECT * FROM categorias WHERE id = $1", [id]);
 
     return res.json({ success: true, categoria: rows[0] });
 
@@ -149,7 +149,7 @@ export async function deleteCategory(req, res) {
 
   try {
     // Verifica se existem produtos usando esta categoria
-    const [prods] = await pool.execute(
+    const { rows:  } = await pool.query(
       "SELECT COUNT(*) AS total FROM produtos WHERE categoria_id = ? AND ativo = TRUE",
       [id]
     );
@@ -161,8 +161,8 @@ export async function deleteCategory(req, res) {
       });
     }
 
-    const [result] = await pool.execute(
-      "DELETE FROM categorias WHERE id = ?",
+    const { rows:  } = await pool.query(
+      "DELETE FROM categorias WHERE id = $1",
       [id]
     );
 

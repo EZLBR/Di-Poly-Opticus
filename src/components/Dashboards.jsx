@@ -258,7 +258,6 @@ export function FactoryDashboard() {
           <div style={{ height: "300px", width: "100%" }}>
             <ResponsiveContainer>
               <PieChart>
-                <Pie
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || "#8884d8"} />

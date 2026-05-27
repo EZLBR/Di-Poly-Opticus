@@ -8,7 +8,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "opticus_premium_jwt_secret_key_2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not set in environment.");
+  process.exit(1);
+}
 
 // ─── Helper: gera JWT ─────────────────────────────────────
 function generateToken(payload) {
@@ -20,7 +24,7 @@ function generateToken(payload) {
 //   POST /api/auth/register
 // ─────────────────────────────────────────────────────────
 export async function register(req, res) {
-  const { name, email, password, role, factoryName } = req.body;
+  const { name, email, password } = req.body;
 
   // Validação básica
   if (!name || !email || !password) {
@@ -30,7 +34,9 @@ export async function register(req, res) {
     });
   }
 
-  const userRole    = role || "client";
+  // Security Fix: Ignore requested role and force "client" for public registration
+  const userRole = "client";
+  const userFactoryName = null;
   const normEmail   = String(email).trim().toLowerCase();
 
   try {
@@ -58,7 +64,7 @@ export async function register(req, res) {
         normEmail,
         senhaHash,
         userRole,
-        userRole === "factory" ? (factoryName || null) : null
+        userFactoryName
       ]
     );
 
@@ -70,7 +76,7 @@ export async function register(req, res) {
       name:        name.trim(),
       email:       normEmail,
       role:        userRole,
-      factoryName: userRole === "factory" ? factoryName : null
+      factoryName: userFactoryName
     };
     const token = generateToken(payload);
 
@@ -256,7 +262,7 @@ export async function deleteUser(req, res) {
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (rowCount === 0) {
       return res.status(404).json({ success: false, error: "Usuário não encontrado." });
     }
 
