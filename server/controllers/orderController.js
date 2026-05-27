@@ -25,6 +25,12 @@ export async function createOrder(req, res) {
   const usuarioId     = req.user.id;
 
   try {
+    let finalFactoryId = Number(factoryId);
+    if (isNaN(finalFactoryId)) {
+      const { rows: fRows } = await pool.query("SELECT id FROM usuarios WHERE role = 'factory' LIMIT 1");
+      finalFactoryId = fRows.length > 0 ? fRows[0].id : null;
+    }
+
     const { rows: result } = await pool.query(
       `INSERT INTO pedidos
        (usuario_id, customer_name, customer_email, product_name,
@@ -35,7 +41,7 @@ export async function createOrder(req, res) {
         customerName,
         customerEmail,
         productName,
-        Number(factoryId) || null,
+        finalFactoryId,
         factoryName,
         Number(total),
         JSON.stringify(customSpecs),
@@ -235,6 +241,12 @@ export async function checkoutCart(req, res) {
       const specsWithQty    = { ...customSpecs, quantity: quantity || 1 };
       const orderTotal      = Number(total) * (quantity || 1);
 
+      let finalFactoryId = Number(factoryId);
+      if (isNaN(finalFactoryId)) {
+        const { rows: fRows } = await pool.query("SELECT id FROM usuarios WHERE role = 'factory' LIMIT 1");
+        finalFactoryId = fRows.length > 0 ? fRows[0].id : null;
+      }
+
       const { rows: result } = await pool.query(
         `INSERT INTO pedidos
          (usuario_id, customer_name, customer_email, product_name,
@@ -245,7 +257,7 @@ export async function checkoutCart(req, res) {
           customerName,
           customerEmail,
           productName,
-          Number(factoryId) || null,
+          finalFactoryId,
           factoryName,
           orderTotal,
           JSON.stringify(specsWithQty),
