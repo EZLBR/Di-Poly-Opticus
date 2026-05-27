@@ -1321,7 +1321,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       if (onOpenDesigns) {
         onOpenDesigns();
       } else {
-        setView("marketplace");
+        setView("designs");
       }
     } catch (err) {
       console.error(err);
