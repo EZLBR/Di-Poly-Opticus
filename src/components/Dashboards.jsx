@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { ShoppingBag, Users, Building, ShieldCheck, DollarSign } from "lucide-react";
+import { ShoppingBag, Users, Building, ShieldCheck, DollarSign, Clock, Info, CheckCircle, ChevronRight, Settings } from "lucide-react";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const CURRENCY_RATES = {
@@ -30,6 +30,79 @@ const filterOrdersByTime = (orders, timeRange) => {
   });
 };
 
+const getDeliveryStatus = (createdAtStr, status) => {
+  if (status === "Delivered") return { color: "#22c55e", label: "Entregue" };
+  if (status === "Cancelled") return { color: "#ef4444", label: "Cancelado" };
+  if (!createdAtStr) return { color: "#6b7280", label: "Data Desconhecida" };
+  
+  const d = new Date(createdAtStr);
+  const deadline = new Date(d.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 dias
+  const diffDays = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays > 15) return { color: "#22c55e", label: `${diffDays} dias restantes` };
+  if (diffDays > 0) return { color: "#eab308", label: `${diffDays} dias restantes` };
+  return { color: "#ef4444", label: "Atrasado!" };
+};
+
+const OrderContextMenu = ({ menu, onClose, onUpdateStatus, onViewDetails }) => {
+  if (!menu) return null;
+  const statuses = ["Queued", "In production", "Delivered"];
+  
+  return (
+    <>
+      <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
+      <div className="premium-glass-card context-menu" style={{
+        position: "fixed", top: menu.y, left: menu.x, zIndex: 9999,
+        padding: "10px", borderRadius: "8px", minWidth: "180px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)"
+      }}>
+        <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: "8px" }}>
+          <strong style={{ fontSize: "12px", color: "var(--color-hint)" }}>Pedido #{menu.order.id}</strong>
+        </div>
+        <button className="menu-btn" onClick={() => { onViewDetails(menu.order); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#fff", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
+          <Info size={14} /> Ver Detalhes
+        </button>
+        <div style={{ padding: "8px 12px", fontSize: "11px", color: "var(--color-hint)", textTransform: "uppercase", marginTop: "4px" }}>Alterar Status</div>
+        {statuses.map(s => (
+          <button key={s} className="menu-btn" onClick={() => { onUpdateStatus(menu.order.id, s); onClose(); }} style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px 12px", background: "none", border: "none", color: s === menu.order.status ? "var(--primary-accent)" : "#fff", cursor: "pointer", borderRadius: "6px", textAlign: "left" }}>
+            {s === menu.order.status ? <CheckCircle size={14} /> : <ChevronRight size={14} />} {s}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+};
+
+const OrderDetailsModal = ({ order, onClose }) => {
+  if (!order) return null;
+  const specs = order.customSpecs || {};
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justify: "center", justifyContent: "center" }} onClick={onClose}>
+      <div className="premium-glass-card" onClick={e => e.stopPropagation()} style={{ width: "90%", maxWidth: "500px", borderRadius: "16px", overflow: "hidden", position: "relative" }}>
+        <div style={{ padding: "24px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <h3 style={{ margin: 0, fontSize: "20px" }}>Detalhes do Pedido #{order.id}</h3>
+          <p style={{ margin: "5px 0 0", color: "var(--color-hint)", fontSize: "14px" }}>{order.productName} • Cliente: {order.customerName}</p>
+        </div>
+        <div style={{ padding: "24px", maxHeight: "60vh", overflowY: "auto" }}>
+          <h4 style={{ color: "var(--primary-accent)", marginTop: 0 }}>Especificações Técnicas</h4>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, color: "var(--text-color)" }}>
+            {Object.entries(specs).map(([k, v]) => (
+              <li key={k} style={{ padding: "10px", backgroundColor: "rgba(255,255,255,0.03)", marginBottom: "8px", borderRadius: "8px", display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--color-hint)", textTransform: "capitalize" }}>{k.replace(/_/g, " ")}:</span>
+                <strong>{typeof v === "boolean" ? (v ? "Sim" : "Não") : String(v)}</strong>
+              </li>
+            ))}
+            {Object.keys(specs).length === 0 && <li style={{ color: "var(--color-hint)" }}>Nenhuma especificação customizada.</li>}
+          </ul>
+        </div>
+        <div style={{ padding: "20px", borderTop: "1px solid rgba(255,255,255,0.05)", textAlign: "right" }}>
+          <button className="premium-button" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export function FactoryDashboard() {
   const { session, orders, updateOrderStatus } = useAuth();
   
@@ -39,6 +112,9 @@ export function FactoryDashboard() {
 
   const [timeRange, setTimeRange] = useState("total");
   const [currency, setCurrency] = useState("USD");
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+
   const { rate, symbol } = CURRENCY_RATES[currency] || CURRENCY_RATES.USD;
 
   const allFactoryOrders = orders.filter((o) => String(o.factoryId) === String(session.id));
@@ -46,6 +122,11 @@ export function FactoryDashboard() {
 
   const handleStatusChange = (orderId, newStatus) => {
     updateOrderStatus(orderId, newStatus);
+  };
+
+  const handleContextMenu = (e, order) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, order });
   };
 
   // 1. Calculate Summary Stats
@@ -194,26 +275,32 @@ export function FactoryDashboard() {
               <th>Order ID</th>
               <th>Customer Name</th>
               <th>Product Name</th>
-              <th>Created At</th>
+              <th>Prazo (30d)</th>
               <th>Status</th>
               <th>Total</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="factoryOrdersBody">
             {factoryOrders.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ padding: "40px", textAlign: "center", color: "var(--color-hint)" }}>
+                <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "var(--color-hint)" }}>
                   No orders routed to your factory yet.
                 </td>
               </tr>
             ) : (
-              factoryOrders.map((order) => (
-                <tr key={order.id}>
+              factoryOrders.map((order) => {
+                const delivery = getDeliveryStatus(order.createdAt, order.status);
+                return (
+                <tr key={order.id} onContextMenu={(e) => handleContextMenu(e, order)} style={{ cursor: "context-menu" }} className="hoverable-row">
                   <td style={{ fontWeight: "600" }}>{order.id}</td>
                   <td>{order.customerName}</td>
                   <td>{order.productName}</td>
-                  <td>{order.createdAt}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: delivery.color }}></span>
+                      <span style={{ fontSize: "12px", color: "var(--color-hint)" }}>{delivery.label}</span>
+                    </div>
+                  </td>
                   <td>
                     <span
                       style={{
@@ -241,29 +328,21 @@ export function FactoryDashboard() {
                     </span>
                   </td>
                   <td>{symbol}{(Number(order.total) * rate).toFixed(2)}</td>
-                  <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      className="premium-select"
-                    >
-                      <option value="Queued">Queued</option>
-                      <option value="In production">In production</option>
-                      <option value="Delivered">Delivered</option>
-                    </select>
-                  </td>
                 </tr>
-              ))
+              )})
             )}
           </tbody>
         </table>
       </section>
+
+      <OrderContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} onUpdateStatus={handleStatusChange} onViewDetails={setSelectedOrderDetails} />
+      <OrderDetailsModal order={selectedOrderDetails} onClose={() => setSelectedOrderDetails(null)} />
     </div>
   );
 }
 
 export function StaffDashboard() {
-  const { session, orders: allStaffOrders, users } = useAuth();
+  const { session, orders: allStaffOrders, users, updateOrderStatus } = useAuth();
 
   if (!session || session.role !== "staff") {
     return <p>Access denied.</p>;
@@ -271,9 +350,21 @@ export function StaffDashboard() {
 
   const [timeRange, setTimeRange] = useState("total");
   const [currency, setCurrency] = useState("USD");
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+
   const { rate, symbol } = CURRENCY_RATES[currency] || CURRENCY_RATES.USD;
 
   const orders = filterOrdersByTime(allStaffOrders, timeRange);
+
+  const handleStatusChange = (orderId, newStatus) => {
+    updateOrderStatus(orderId, newStatus);
+  };
+
+  const handleContextMenu = (e, order) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, order });
+  };
 
   const clientsCount = users.filter((u) => u.role === "client").length;
   const factoriesCount = users.filter((u) => u.role === "factory").length;
@@ -493,17 +584,26 @@ export function StaffDashboard() {
                   <th>Client</th>
                   <th>Product</th>
                   <th>Factory Partner</th>
+                  <th>Prazo (30d)</th>
                   <th>Status</th>
                   <th>Total</th>
                 </tr>
               </thead>
               <tbody id="staffOrdersBody">
-                {orders.map((order) => (
-                  <tr key={order.id}>
+                {orders.map((order) => {
+                  const delivery = getDeliveryStatus(order.createdAt, order.status);
+                  return (
+                  <tr key={order.id} onContextMenu={(e) => handleContextMenu(e, order)} style={{ cursor: "context-menu" }} className="hoverable-row">
                     <td style={{ fontWeight: "600" }}>{order.id}</td>
                     <td>{order.customerName}</td>
                     <td>{order.productName}</td>
                     <td>{order.factoryName}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: delivery.color }}></span>
+                        <span style={{ fontSize: "12px", color: "var(--color-hint)" }}>{delivery.label}</span>
+                      </div>
+                    </td>
                     <td>
                       <span
                         style={{
@@ -531,7 +631,7 @@ export function StaffDashboard() {
                     </td>
                     <td>{symbol}{(Number(order.total) * rate).toFixed(2)}</td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
@@ -580,6 +680,9 @@ export function StaffDashboard() {
           </div>
         </section>
       </div>
+
+      <OrderContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} onUpdateStatus={handleStatusChange} onViewDetails={setSelectedOrderDetails} />
+      <OrderDetailsModal order={selectedOrderDetails} onClose={() => setSelectedOrderDetails(null)} />
     </div>
   );
 }
