@@ -39,10 +39,10 @@ export async function createBilling(req, res) {
         [mockBillingId, orderId]
       );
 
-      await _registrarPagamento(orderId, "pix", "pendente", Number(order.total), mockBillingId);
-
       const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
-      const mockCheckoutUrl = `${frontendOrigin}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}`;
+      const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
+      const backendOrigin = `${backendProto}://${req.get("host")}`;
+      const mockCheckoutUrl = `${backendOrigin}/api/payments/simulated-checkout?billingId=${mockBillingId}&orderId=${orderId}&returnTo=${encodeURIComponent(frontendOrigin)}`;
 
       return res.json({ success: true, checkoutUrl: mockCheckoutUrl, isSimulated: true });
     }
@@ -91,7 +91,10 @@ export async function createBilling(req, res) {
       [fallbackId, orderId]
     );
 
-    const fallbackUrl = `${frontendOrigin}/api/payments/simulated-checkout?billingId=${fallbackId}&orderId=${orderId}`;
+    const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
+    const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
+    const backendOrigin = `${backendProto}://${req.get("host")}`;
+    const fallbackUrl = `${backendOrigin}/api/payments/simulated-checkout?billingId=${fallbackId}&orderId=${orderId}&returnTo=${encodeURIComponent(frontendOrigin)}`;
 
     return res.json({ success: true, checkoutUrl: fallbackUrl, isSimulated: true, notice: "Fallback para simulador." });
   }
@@ -186,7 +189,7 @@ export async function handleWebhook(req, res) {
 //   GET /api/payments/simulated-checkout
 // ─────────────────────────────────────────────────────────
 export async function getSimulatedCheckoutPage(req, res) {
-  const { billingId } = req.query;
+  const { billingId, orderId, returnTo } = req.query;
 
   if (!billingId) {
     return res.status(400).send("<h3>billingId ausente.</h3>");
@@ -250,6 +253,7 @@ export async function getSimulatedCheckoutPage(req, res) {
     </div>
     <form action="/api/payments/confirm-simulated-payment" method="POST">
       <input type="hidden" name="billingId" value="${billingId}" />
+      <input type="hidden" name="returnTo" value="${returnTo || 'http://localhost:5173'}" />
       <button type="submit" class="btn">Simular Pagamento Pix</button>
     </form>
   </div>
@@ -269,7 +273,7 @@ export async function getSimulatedCheckoutPage(req, res) {
 //   POST /api/payments/confirm-simulated-payment
 // ─────────────────────────────────────────────────────────
 export async function confirmSimulatedPayment(req, res) {
-  const { billingId } = req.body;
+  const { billingId, returnTo } = req.body;
 
   if (!billingId) {
     return res.status(400).send("<h3>billingId ausente.</h3>");
@@ -286,13 +290,9 @@ export async function confirmSimulatedPayment(req, res) {
       [billingId]
     );
 
-    console.log(`[Simulador] Pagamento confirmado! Cobrança \${billingId} → Fila de Produção.`);
-
     let redirectUrl = "http://localhost:5173/?payment=success";
-    if (req.headers.origin) {
-      redirectUrl = `${req.headers.origin}/?payment=success`;
-    } else if (req.headers.referer) {
-      redirectUrl = `${new URL(req.headers.referer).origin}/?payment=success`;
+    if (returnTo) {
+      redirectUrl = `${returnTo}/?payment=success`;
     }
 
     return res.redirect(redirectUrl);
