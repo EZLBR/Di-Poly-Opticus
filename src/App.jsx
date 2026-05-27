@@ -13,7 +13,7 @@ import { Check, X } from "lucide-react";
 function App() {
   const [view, setView] = useState("marketplace");
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const { session } = useAuth();
+  const { session, clearCart } = useAuth();
   const { language } = useTranslation();
 
   // Check for successful payment return redirect
@@ -21,6 +21,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success") {
       setShowPaymentSuccess(true);
+      clearCart(); // Esvazia o carrinho de compras automaticamente
       // Clean query parameter from URL without page reload
       const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
       window.history.replaceState({ path: newUrl }, "", newUrl);
