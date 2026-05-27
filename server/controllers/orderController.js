@@ -262,8 +262,11 @@ export async function checkoutCart(req, res) {
       });
     }
 
+    const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
+    const backendProto = req.headers['x-forwarded-proto'] || req.protocol;
+    const backendOrigin = `${backendProto}://${req.get("host")}`;
+
     const ABACATE_TOKEN = process.env.ABACATE_TOKEN;
-    const PORT          = process.env.PORT || 5000;
     const isMockToken   = !ABACATE_TOKEN || ABACATE_TOKEN.includes("your_abacatepay_token_here");
 
     if (!isMockToken) {
@@ -289,8 +292,8 @@ export async function checkoutCart(req, res) {
             frequency:     "ONE_TIME",
             methods:       ["PIX"],
             products:      abacateProducts,
-            returnUrl:     `http://localhost:${PORT === "5000" ? 5174 : 5173}`,
-            completionUrl: `http://localhost:${PORT === "5000" ? 5174 : 5173}`,
+            returnUrl:     `${frontendOrigin}/`,
+            completionUrl: `${frontendOrigin}/`,
             customer:      { name: customerName, email: customerEmail, taxId: "00000000000" }
           })
         });
@@ -318,7 +321,7 @@ export async function checkoutCart(req, res) {
       }
     }
 
-    const simulatedCheckoutUrl = `http://localhost:${PORT}/api/payments/simulated-checkout?billingId=${consolidatedBillingId}`;
+    const simulatedCheckoutUrl = `${backendOrigin}/api/payments/simulated-checkout?billingId=${consolidatedBillingId}&returnTo=${encodeURIComponent(frontendOrigin)}`;
 
     return res.json({
       success:     true,
