@@ -18,10 +18,11 @@ const poolConfig = {
   database: process.env.DB_NAME || "opticus_db",
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 15000, // 15 seconds for slow cold starts
 };
 
-if (process.env.DB_SSL === "true") {
+// Always use SSL for Supabase to prevent connection hangs
+if (process.env.DB_SSL === "true" || poolConfig.host.includes("supabase.com")) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 
