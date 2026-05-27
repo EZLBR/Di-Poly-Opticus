@@ -9,6 +9,13 @@ const CURRENCY_RATES = {
   EUR: { rate: 0.92, symbol: "€" }
 };
 
+const STATUS_COLORS = {
+  "Queued": "#eab308",
+  "In production": "#3b82f6",
+  "Delivered": "#22c55e",
+  "Pending Payment": "#ef4444"
+};
+
 const filterOrdersByTime = (orders, timeRange) => {
   if (timeRange === "total") return orders;
   const now = new Date();
@@ -252,17 +259,9 @@ export function FactoryDashboard() {
             <ResponsiveContainer>
               <PieChart>
                 <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || "#8884d8"} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ backgroundColor: "rgba(10, 10, 15, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#fff" }} />
@@ -389,8 +388,6 @@ export function StaffDashboard() {
     name: key,
     value: statusCount[key]
   })).filter(d => d.value > 0);
-
-  const COLORS = ["#eab308", "#3b82f6", "#22c55e", "#ef4444"];
 
   const factoryMap = {};
   orders.forEach((o) => {
@@ -556,17 +553,9 @@ export function StaffDashboard() {
           <div style={{ height: "300px", width: "100%" }}>
             <ResponsiveContainer>
               <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || "#8884d8"} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ backgroundColor: "rgba(10, 10, 15, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#fff" }} />
