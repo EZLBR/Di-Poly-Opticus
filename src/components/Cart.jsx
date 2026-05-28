@@ -146,7 +146,7 @@ export default function Cart({ setView }) {
           </button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "30px", alignItems: "start" }}>
+        <div className="cart-layout">
           
           {/* Cart Items List */}
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -159,19 +159,11 @@ export default function Cart({ setView }) {
               return (
                 <div 
                   key={item.id} 
-                  className="premium-glass-card" 
-                  style={{
-                    display: "flex",
-                    padding: "20px",
-                    borderRadius: "12px",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    alignItems: "center",
-                    gap: "24px"
-                  }}
+                  className="premium-glass-card cart-item"
                 >
                   <ThreePreview shape={shape} color={color} isSunglasses={isSun} />
                   
-                  <div style={{ flex: 1 }}>
+                  <div className="cart-item-details">
                     <h3 style={{ fontSize: "18px", fontWeight: "600", margin: "0 0 6px 0" }}>
                       {item.productName}
                     </h3>
@@ -230,7 +222,7 @@ export default function Cart({ setView }) {
                   </div>
 
                   {/* Quantity Actions */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div className="cart-item-actions">
                     <div style={{ 
                       display: "flex", 
                       alignItems: "center", 

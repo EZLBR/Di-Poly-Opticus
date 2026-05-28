@@ -202,7 +202,7 @@ export default function Marketplace({ setView }) {
           </div>
         </section>
 
-        <main className="marketplace" style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "30px", marginTop: "40px" }}>
+        <main className="marketplace">
           <aside className="filters">
             <div className="panel-kicker">{t("filter-refine")}</div>
             <h3>{t("filter-by")}</h3>
@@ -261,7 +261,7 @@ export default function Marketplace({ setView }) {
           </aside>
 
           <section className="catalog">
-            <div className="catalog-toolbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", gap: "20px" }}>
+            <div className="catalog-toolbar">
               <div className="toolbar-copy">
                 <span className="panel-kicker">Catalog</span>
                 <h2>Discover standout shapes and materials</h2>
@@ -295,7 +295,7 @@ export default function Marketplace({ setView }) {
               </div>
             </div>
 
-            <section className="products" id="productGrid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "24px" }}>
+            <section className="products" id="productGrid">
               {filteredList.length === 0 ? (
                 <div className="empty-state" style={{ gridColumn: "1/-1", textAlign: "center", padding: "60px 0" }}>
                   <h3>No designs found</h3>
@@ -346,15 +346,7 @@ export default function Marketplace({ setView }) {
         </main>
 
         {/* Premium Footer */}
-        <footer className="marketplace-footer" style={{
-          marginTop: "100px",
-          padding: "80px 40px 40px",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "40px",
-          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)"
-        }}>
+        <footer className="marketplace-footer">
           <div>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "28px", marginBottom: "20px" }}>OPTICUS</h2>
             <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.6" }}>
@@ -387,7 +379,7 @@ export default function Marketplace({ setView }) {
               <button className="btn primary" style={{ padding: "0 16px" }}>Join</button>
             </div>
           </div>
-          <div style={{ gridColumn: "1/-1", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "30px", marginTop: "20px", display: "flex", justifyContent: "space-between", color: "var(--text-muted)", fontSize: "12px", flexWrap: "wrap", gap: "10px" }}>
+          <div className="footer-bottom">
             <span>&copy; {new Date().getFullYear()} OPTICUS LUXURY EYEWEAR. All rights reserved.</span>
             <div style={{ display: "flex", gap: "20px" }}>
               <a href="#" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Privacy Policy</a>
