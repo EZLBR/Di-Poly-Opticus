@@ -830,7 +830,7 @@ export default function CreatorCanvas() {
   return (
     <div className="relative w-full h-full flex-1 min-h-[500px]">
       {/* 3D WebGL Canvas Container */}
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+      <div id="threeContainer" ref={containerRef} className="absolute inset-0 w-full h-full" style={{ background: "white", zIndex: 1 }} />
       
       {/* MediaPipe AR Elements */}
       <video ref={videoRef} className="hidden" playsInline />
