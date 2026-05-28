@@ -791,8 +791,16 @@ export default function CreatorCanvas() {
   };
 
   return (
-    <>
-${canvasJSX}
-    </>
+    <div className="relative w-full h-full">
+      {/* 3D WebGL Canvas Container */}
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+      
+      {/* MediaPipe AR Elements */}
+      <video ref={videoRef} className="hidden" playsInline />
+      <canvas 
+        ref={canvasRef} 
+        className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-500 ${tryOnMode ? 'opacity-100' : 'opacity-0'}`} 
+      />
+    </div>
   );
 }
