@@ -492,8 +492,21 @@ export default function CreatorCanvas() {
         gltf.scene.position.y += (gltf.scene.position.y - center.y);
         gltf.scene.position.z += (gltf.scene.position.z - center.z);
         
-        const targetWidth = w * 2 + bridge;
-        const scaleFactor = targetWidth / size.x;
+        // Protect against corrupted bounding boxes causing Infinity scaling
+        const targetWidth = (w * 2 + bridge) || 3.95;
+        let scaleFactor = 1;
+        if (size.x > 0.001) {
+          scaleFactor = targetWidth / size.x;
+        } else {
+          console.warn("[Opticus] Aviso: Bounding Box do modelo 3D é muito pequena ou inválida. Aplicando escala padrão.");
+          scaleFactor = 10; // Fallback scale if size is glitched
+        }
+        
+        // Prevent catastrophic scales
+        if (isNaN(scaleFactor) || !isFinite(scaleFactor)) {
+          scaleFactor = 1;
+        }
+        scaleFactor = Math.min(Math.max(scaleFactor, 0.001), 1000);
         gltf.scene.scale.setScalar(scaleFactor);
 
         frontGroupRef.current.add(gltf.scene);
