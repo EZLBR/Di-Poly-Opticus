@@ -11,7 +11,8 @@ import { sendOrderStatusEmail } from "../utils/emailService.js";
 //   POST /api/orders
 // ─────────────────────────────────────────────────────────
 export async function createOrder(req, res) {
-  const { productName, factoryId, factoryName, total, customSpecs, status } = req.body;
+  // 🔐 Security Fix: 'status' is completely ignored from req.body to prevent payment bypass.
+  const { productName, factoryId, factoryName, total, customSpecs } = req.body;
 
   if (!productName || !factoryId || !factoryName || !total || !customSpecs) {
     return res.status(400).json({
@@ -45,7 +46,7 @@ export async function createOrder(req, res) {
         factoryName,
         Number(total),
         JSON.stringify(customSpecs),
-        status || "Queued"
+        "Pending Payment" // 🔒 Trava de Segurança
       ]
     );
 
