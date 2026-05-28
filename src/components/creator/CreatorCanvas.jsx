@@ -488,10 +488,6 @@ export default function CreatorCanvas() {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         
-        gltf.scene.position.x += (gltf.scene.position.x - center.x);
-        gltf.scene.position.y += (gltf.scene.position.y - center.y);
-        gltf.scene.position.z += (gltf.scene.position.z - center.z);
-        
         // Protect against corrupted bounding boxes causing Infinity scaling
         const targetWidth = (w * 2 + bridge) || 3.95;
         let scaleFactor = 1;
@@ -499,7 +495,7 @@ export default function CreatorCanvas() {
           scaleFactor = targetWidth / size.x;
         } else {
           console.warn("[Opticus] Aviso: Bounding Box do modelo 3D é muito pequena ou inválida. Aplicando escala padrão.");
-          scaleFactor = 10; // Fallback scale if size is glitched
+          scaleFactor = 10;
         }
         
         // Prevent catastrophic scales
@@ -507,7 +503,15 @@ export default function CreatorCanvas() {
           scaleFactor = 1;
         }
         scaleFactor = Math.min(Math.max(scaleFactor, 0.001), 1000);
+        
+        // Apply Scale FIRST
         gltf.scene.scale.setScalar(scaleFactor);
+        
+        // THEN Apply Position Translation so the exact center lands on (0,0,0)
+        // Formula: P = -C * S
+        gltf.scene.position.x = -center.x * scaleFactor;
+        gltf.scene.position.y = -center.y * scaleFactor;
+        gltf.scene.position.z = -center.z * scaleFactor;
 
         frontGroupRef.current.add(gltf.scene);
       },
