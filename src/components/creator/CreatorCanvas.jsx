@@ -817,7 +817,7 @@ export default function CreatorCanvas() {
   return (
     <div className="relative w-full h-full flex-1 min-h-[500px]">
       {/* 3D WebGL Canvas Container */}
-      <div id="threeContainer" ref={containerRef} className="absolute inset-0 w-full h-full" style={{ background: "white", zIndex: 1 }} />
+      <div id="threeContainer" ref={containerRef} className="absolute inset-0 w-full h-full" style={{ background: "transparent", zIndex: 1 }} />
       
       {/* MediaPipe AR Elements */}
       <video ref={videoRef} className="hidden" playsInline />
@@ -825,6 +825,55 @@ export default function CreatorCanvas() {
         ref={canvasRef} 
         className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-500 ${tryOnMode ? 'opacity-100' : 'opacity-0'}`} 
       />
+
+      {/* Floating Camera controls (Only in 3D Mode) */}
+      {!tryOnMode && (
+        <div 
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: "6px",
+            background: "var(--glass-card-bg)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            padding: "10px",
+            borderRadius: "16px",
+            border: "1px solid var(--glass-card-border)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+            zIndex: 40
+          }}
+        >
+          <button 
+            onClick={() => setAutoRotate(!autoRotate)}
+            className={`btn ${autoRotate ? "primary" : ""}`}
+            style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
+            title="Toggle auto-rotation"
+          >
+            <RotateCw size={16} />
+          </button>
+          <button 
+            onClick={() => {
+              if(cameraAngleRef.current) cameraAngleRef.current.targetRadius = Math.max(3.0, cameraAngleRef.current.targetRadius - 0.8);
+            }}
+            className="btn"
+            style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
+          >
+            <ZoomIn size={16} />
+          </button>
+          <button 
+            onClick={() => {
+              if(cameraAngleRef.current) cameraAngleRef.current.targetRadius = Math.min(10.0, cameraAngleRef.current.targetRadius + 0.8);
+            }}
+            className="btn"
+            style={{ width: "40px", height: "40px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px" }}
+          >
+            <ZoomOut size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
