@@ -262,13 +262,12 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
           }}
         >
           {/* LEFT COLUMN: 3D Viewport & Webcam */}
-          <div className="viewport premium-glass-card" style={{ display: 'none' }}>
-            {/* The old viewport card is hidden because we moved the canvas and headers to absolute positioning */}
-          </div>
-
-          <CreatorCanvas />
+          <div className="viewport premium-glass-card" style={{ display: "flex", flexDirection: "column", height: "600px", padding: 0, overflow: "hidden", position: "relative" }}>
+            
+            <CreatorCanvas />
+            
             {/* Viewport footer actions & Smart Face Recognition Advice */}
-            <div className="studio-left-panel">
+            <div className="studio-left-panel" style={{ zIndex: 10, position: "absolute", bottom: 0, left: 0, right: 0 }}>
               <div 
                 style={{
                   padding: "16px 20px",
@@ -322,6 +321,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
                 </div>
               )}
             </div>
+          </div>
 
           {/* RIGHT COLUMN: Control Panel (Step 1 or Step 2) */}
           <div 
