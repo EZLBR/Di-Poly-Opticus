@@ -134,17 +134,41 @@ export default function CreatorCanvas() {
     glassesGroupRef.current.add(leftTemplePivotRef.current);
     glassesGroupRef.current.add(rightTemplePivotRef.current);
 
-    // Handle Window Resize
-    const handleResize = () => {
+    // Force a resize check periodically just in case CSS transitions delay the initial paint
+    const forceResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
-      cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      if (width > 0 && height > 0) {
+        cameraRef.current.aspect = width / height;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(width, height);
+      }
     };
-    window.addEventListener("resize", handleResize);
+    
+    // Handle Container Resize dynamically using ResizeObserver
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (!rendererRef.current || !cameraRef.current) return;
+        const width = entry.contentRect.width || entry.target.clientWidth;
+        const height = entry.contentRect.height || entry.target.clientHeight;
+        if (width > 0 && height > 0) {
+          cameraRef.current.aspect = width / height;
+          cameraRef.current.updateProjectionMatrix();
+          rendererRef.current.setSize(width, height);
+        }
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+      setTimeout(forceResize, 100);
+      setTimeout(forceResize, 500);
+      setTimeout(forceResize, 1500);
+    }
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       if (rendererRef.current) rendererRef.current.dispose();
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       if (trackingFrameIdRef.current) cancelAnimationFrame(trackingFrameIdRef.current);
@@ -791,7 +815,7 @@ export default function CreatorCanvas() {
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full flex-1 min-h-[500px]">
       {/* 3D WebGL Canvas Container */}
       <div ref={containerRef} className="absolute inset-0 w-full h-full" />
       
