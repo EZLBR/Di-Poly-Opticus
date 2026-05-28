@@ -1,7 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
-import { CreatorProvider } from "./contexts/CreatorContext";
 import Navbar from "./components/Navbar";
 import { useTranslation } from "./contexts/LanguageContext";
 import { Check, X } from "lucide-react";
@@ -78,11 +77,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Marketplace setView={setViewLegacy} />} />
             <Route path="/designs" element={<DesignsGallery setView={setViewLegacy} />} />
-            <Route path="/create" element={
-              <CreatorProvider>
-                <CreatorStudio setView={setViewLegacy} />
-              </CreatorProvider>
-            } />
+            <Route path="/create" element={<CreatorStudio setView={setViewLegacy} />} />
             <Route path="/cart" element={<Cart setView={setViewLegacy} />} />
             <Route path="/login" element={<AuthPage setView={setViewLegacy} />} />
             <Route path="/factory-dashboard" element={<FactoryDashboard />} />
