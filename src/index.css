@@ -78,7 +78,6 @@ body {
   background: var(--bg-light);
   border-radius: 12px;
   box-shadow: 0 20px 50px var(--shadow);
-  overflow: hidden;
 }
 
 /* Navigation */
