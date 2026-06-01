@@ -4,7 +4,7 @@ import { useCreatorStudio } from "../../contexts/CreatorStudioContext";
 
 export default function ThreePreview() {
   const {
-    model, frameProfile, templeOpen,
+    frontModel, templeModel, frameProfile, templeOpen,
     frameMaterial, color,
     isSunglasses, lensMaterial, lensTreatments,
     nosePadMaterial, templeTipMaterial, hingeMaterial,
@@ -43,8 +43,10 @@ export default function ThreePreview() {
     wayfarer: { frameWidth: 2.25, lensSize: 1.20, legLength: 2.9, thickness: 0.16, bridgeWidth: 0.5 },
     cateye: { frameWidth: 2.15, lensSize: 1.15, legLength: 2.75, thickness: 0.14, bridgeWidth: 0.48 }
   };
-  const currentDims = dimensionsMap[model] || dimensionsMap["aviator"];
-  const safeModel = dimensionsMap[model] ? model : "aviator";
+  const frontDims = dimensionsMap[frontModel] || dimensionsMap["aviator"];
+  const templeDims = dimensionsMap[templeModel] || dimensionsMap["aviator"];
+  const safeFrontModel = dimensionsMap[frontModel] ? frontModel : "aviator";
+  const safeTempleModel = dimensionsMap[templeModel] ? templeModel : "aviator";
 
   // --- Initialize Scene ---
   useEffect(() => {
@@ -214,7 +216,7 @@ export default function ThreePreview() {
   useEffect(() => {
     buildGlassesMesh();
   }, [
-    model, frameProfile, frameMaterial, color,
+    frontModel, templeModel, frameProfile, frameMaterial, color,
     isSunglasses, lensMaterial, lensTreatments,
     nosePadMaterial, templeTipMaterial, hingeMaterial
   ]);
@@ -338,38 +340,38 @@ export default function ThreePreview() {
       return shape;
     };
 
-    const widthScale = Math.max(0.72, Math.min(1.45, currentDims.frameWidth / 2.2));
-    let lensX = currentDims.lensSize * widthScale;
-    let lensY = currentDims.lensSize * 0.90;
+    const widthScale = Math.max(0.72, Math.min(1.45, frontDims.frameWidth / 2.2));
+    let lensX = frontDims.lensSize * widthScale;
+    let lensY = frontDims.lensSize * 0.90;
     
     let thicknessMul = 1.0;
     if (frameProfile === "thin") thicknessMul = 0.78;
     if (frameProfile === "bold") thicknessMul = 1.35;
 
-    const outerX = lensX + currentDims.thickness * thicknessMul;
-    const outerY = lensY + currentDims.thickness * 0.9 * thicknessMul;
-    const adjustedFrameDepth = Math.max(0.1, Math.min(0.34, currentDims.thickness * 1.9 * thicknessMul));
+    const outerX = lensX + frontDims.thickness * thicknessMul;
+    const outerY = lensY + frontDims.thickness * 0.9 * thicknessMul;
+    const adjustedFrameDepth = Math.max(0.1, Math.min(0.34, frontDims.thickness * 1.9 * thicknessMul));
 
-    const lensOffsetX = lensX + currentDims.bridgeWidth * 0.5 + currentDims.thickness * 0.55;
+    const lensOffsetX = lensX + frontDims.bridgeWidth * 0.5 + frontDims.thickness * 0.55;
     
     // Front Group
     const frontGroup = new THREE.Group();
     rootGroup.add(frontGroup);
 
-    const outerShapeRight = getLensShape(safeModel, outerX, outerY, false);
-    const innerShapeRight = getLensShape(safeModel, lensX, lensY, false);
+    const outerShapeRight = getLensShape(safeFrontModel, outerX, outerY, false);
+    const innerShapeRight = getLensShape(safeFrontModel, lensX, lensY, false);
     outerShapeRight.holes.push(innerShapeRight);
     const rimGeoRight = new THREE.ExtrudeGeometry(outerShapeRight, { depth: adjustedFrameDepth, bevelEnabled: true, bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18, bevelSegments: 3, curveSegments: 24 }).center();
     
-    const lensShapeRight = getLensShape(safeModel, lensX, lensY, false);
+    const lensShapeRight = getLensShape(safeFrontModel, lensX, lensY, false);
     const lensGeoRight = new THREE.ExtrudeGeometry(lensShapeRight, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2, curveSegments: 24 }).center();
 
-    const outerShapeLeft = getLensShape(safeModel, outerX, outerY, true);
-    const innerShapeLeft = getLensShape(safeModel, lensX, lensY, true);
+    const outerShapeLeft = getLensShape(safeFrontModel, outerX, outerY, true);
+    const innerShapeLeft = getLensShape(safeFrontModel, lensX, lensY, true);
     outerShapeLeft.holes.push(innerShapeLeft);
     const rimGeoLeft = new THREE.ExtrudeGeometry(outerShapeLeft, { depth: adjustedFrameDepth, bevelEnabled: true, bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18, bevelSegments: 3, curveSegments: 24 }).center();
     
-    const lensShapeLeft = getLensShape(safeModel, lensX, lensY, true);
+    const lensShapeLeft = getLensShape(safeFrontModel, lensX, lensY, true);
     const lensGeoLeft = new THREE.ExtrudeGeometry(lensShapeLeft, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2, curveSegments: 24 }).center();
 
     const rightRim = new THREE.Mesh(rimGeoRight, frameMat); rightRim.position.set(lensOffsetX, 0, 0); rightRim.castShadow = true; frontGroup.add(rightRim);
@@ -378,14 +380,14 @@ export default function ThreePreview() {
     const leftLens = new THREE.Mesh(lensGeoLeft, lensMat); leftLens.position.set(-lensOffsetX, 0, adjustedFrameDepth * 0.12); frontGroup.add(leftLens);
 
     // Bridge
-    const bw = currentDims.bridgeWidth;
+    const bw = frontDims.bridgeWidth;
     const bridgeCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-bw * 0.5, 0.10, 0),
       new THREE.Vector3(-bw * 0.18, -0.06, 0.03),
       new THREE.Vector3(bw * 0.18, -0.06, 0.03),
       new THREE.Vector3(bw * 0.5, 0.10, 0)
     ]);
-    const bridgeGeo = new THREE.TubeGeometry(bridgeCurve, 28, Math.max(0.04, currentDims.thickness * 0.3), 12, false);
+    const bridgeGeo = new THREE.TubeGeometry(bridgeCurve, 28, Math.max(0.04, frontDims.thickness * 0.3), 12, false);
     const bridgeMesh = new THREE.Mesh(bridgeGeo, frameMat);
     bridgeMesh.position.set(0, -0.03, adjustedFrameDepth * 0.02);
     bridgeMesh.castShadow = true;
@@ -406,8 +408,9 @@ export default function ThreePreview() {
     frontGroup.add(leftPad);
 
     // Temples & Hinges
-    const hingeX = lensOffsetX + outerX - currentDims.thickness * 0.35;
-    const templeLen = currentDims.legLength;
+    // Hinge position uses front dimensions to align with the front rims
+    const hingeX = lensOffsetX + outerX - frontDims.thickness * 0.35;
+    const templeLen = templeDims.legLength;
 
     const leftPivot = new THREE.Group();
     leftPivot.position.set(-hingeX, lensY * 0.4, 0);
@@ -431,12 +434,13 @@ export default function ThreePreview() {
       new THREE.Vector3(0.02, -0.05, -templeLen * 0.6),
       new THREE.Vector3(-0.05, -0.4, -templeLen)
     ]);
-    const armGeo = new THREE.TubeGeometry(armCurve, 32, currentDims.thickness * 0.4 * thicknessMul, 8, false);
+    // Use templeDims for the thickness of the temple
+    const armGeo = new THREE.TubeGeometry(armCurve, 32, templeDims.thickness * 0.4 * thicknessMul, 8, false);
     
     const rightArm = new THREE.Mesh(armGeo, frameMat); rightArm.castShadow = true; rightPivot.add(rightArm);
     
     const armCurveLeft = new THREE.CatmullRomCurve3(armCurve.points.map(p => new THREE.Vector3(-p.x, p.y, p.z)));
-    const armGeoLeft = new THREE.TubeGeometry(armCurveLeft, 32, currentDims.thickness * 0.4 * thicknessMul, 8, false);
+    const armGeoLeft = new THREE.TubeGeometry(armCurveLeft, 32, templeDims.thickness * 0.4 * thicknessMul, 8, false);
     const leftArm = new THREE.Mesh(armGeoLeft, frameMat); leftArm.castShadow = true; leftPivot.add(leftArm);
 
     // Temple Tips
@@ -444,11 +448,11 @@ export default function ThreePreview() {
       new THREE.Vector3(0.02, -0.05, -templeLen * 0.6),
       new THREE.Vector3(-0.05, -0.4, -templeLen)
     ]);
-    const tipGeoRight = new THREE.TubeGeometry(tipCurveRight, 16, currentDims.thickness * 0.45 * thicknessMul, 8, false);
+    const tipGeoRight = new THREE.TubeGeometry(tipCurveRight, 16, templeDims.thickness * 0.45 * thicknessMul, 8, false);
     const rightTip = new THREE.Mesh(tipGeoRight, tipMat); rightPivot.add(rightTip);
 
     const tipCurveLeft = new THREE.CatmullRomCurve3(tipCurveRight.points.map(p => new THREE.Vector3(-p.x, p.y, p.z)));
-    const tipGeoLeft = new THREE.TubeGeometry(tipCurveLeft, 16, currentDims.thickness * 0.45 * thicknessMul, 8, false);
+    const tipGeoLeft = new THREE.TubeGeometry(tipCurveLeft, 16, templeDims.thickness * 0.45 * thicknessMul, 8, false);
     const leftTip = new THREE.Mesh(tipGeoLeft, tipMat); leftPivot.add(leftTip);
 
     // Final reposition
@@ -456,11 +460,11 @@ export default function ThreePreview() {
   };
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gray-900/5 overflow-hidden">
-      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing outline-none" />
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(17, 24, 39, 0.05)", overflow: "hidden" }}>
+      <div ref={containerRef} style={{ width: "100%", height: "100%", cursor: "grab", outline: "none" }} />
       
       {/* Overlay Status */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-400 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm pointer-events-none">
+      <div style={{ position: "absolute", bottom: "16px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#9ca3af", backgroundColor: "rgba(255, 255, 255, 0.8)", backdropFilter: "blur(4px)", padding: "8px 16px", borderRadius: "9999px", boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", pointerEvents: "none" }}>
         Drag to rotate • Scroll to zoom
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useCreatorStudio } from "../../contexts/CreatorStudioContext";
 import { useTranslation } from "../../contexts/LanguageContext";
-import { Check, Sliders, Box, ShieldCheck, Sun, Eye, Droplet, Sparkles, Layers } from "lucide-react";
+import { Check, Sliders, Box, ShieldCheck, Sun, Eye, Droplet, Sparkles, Layers, Download } from "lucide-react";
 
 const CURATED_COLORS = [
   { name: "Matte Charcoal", hex: "#111827" },
@@ -14,9 +14,10 @@ const CURATED_COLORS = [
   { name: "Rose Gold", hex: "#b76e79" },
 ];
 
-export default function CustomizationPanel() {
+export default function CustomizationPanel({ onSave, onOrder }) {
   const {
-    model, setModel,
+    frontModel, setFrontModel,
+    templeModel, setTempleModel,
     frameProfile, setFrameProfile,
     frameMaterial, setFrameMaterial,
     color, setColor,
@@ -30,16 +31,18 @@ export default function CustomizationPanel() {
   } = useCreatorStudio();
 
   const { language, t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("frame"); // frame, lenses, details
+  const [activeTab, setActiveTab] = useState("frame");
 
   const renderTabButton = (id, label, icon) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex-1 py-3 px-2 text-xs font-semibold uppercase tracking-wider flex flex-col items-center gap-1 border-b-2 transition-all ${
-        activeTab === id 
-          ? "border-black text-black" 
-          : "border-transparent text-gray-400 hover:text-gray-600"
-      }`}
+      style={{
+        flex: 1, padding: "12px 8px", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px",
+        display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", border: "none", cursor: "pointer",
+        background: "transparent", transition: "all 0.2s",
+        borderBottom: activeTab === id ? "2px solid #000" : "2px solid transparent",
+        color: activeTab === id ? "#000" : "#999"
+      }}
     >
       {icon}
       {label}
@@ -47,25 +50,29 @@ export default function CustomizationPanel() {
   );
 
   return (
-    <div className="customization-panel bg-white/95 backdrop-blur-md shadow-2xl rounded-l-2xl h-full flex flex-col overflow-hidden w-96 border-l border-gray-100">
+    <div style={{
+      background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", boxShadow: "-4px 0 24px rgba(0,0,0,0.08)",
+      borderTopLeftRadius: "24px", borderBottomLeftRadius: "24px", height: "100%", display: "flex", flexDirection: "column",
+      borderLeft: "1px solid #eaeaea", overflow: "hidden"
+    }}>
       
       {/* Tabs Header */}
-      <div className="flex border-b border-gray-100 bg-gray-50/50 pt-2 px-2">
+      <div style={{ display: "flex", borderBottom: "1px solid #eaeaea", background: "rgba(248, 250, 252, 0.5)", paddingTop: "8px", paddingLeft: "8px", paddingRight: "8px" }}>
         {renderTabButton("frame", language === "pt" ? "Armação" : "Frame", <Box size={16} />)}
         {renderTabButton("lenses", language === "pt" ? "Lentes" : "Lenses", <Eye size={16} />)}
         {renderTabButton("details", language === "pt" ? "Detalhes" : "Details", <Sliders size={16} />)}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-8">
+      <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "32px" }}>
         
         {/* --- TAB: FRAME --- */}
         {activeTab === "frame" && (
           <>
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
-                {language === "pt" ? "Silhueta" : "Silhouette"}
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
+                {language === "pt" ? "Silhueta Frontal" : "Front Silhouette"}
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {[
                   { id: "aviator", label: "Aviator" },
                   { id: "wayfarer", label: "Wayfarer" },
@@ -73,10 +80,12 @@ export default function CustomizationPanel() {
                 ].map((s) => (
                   <button
                     key={s.id}
-                    className={`py-3 px-2 rounded-lg text-sm border transition-all ${
-                      model === s.id ? "border-black bg-black text-white font-medium" : "border-gray-200 text-gray-600 hover:border-gray-400"
-                    }`}
-                    onClick={() => setModel(s.id)}
+                    style={{
+                      padding: "12px 8px", borderRadius: "8px", fontSize: "13px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                      borderColor: frontModel === s.id ? "#000" : "#e2e8f0", background: frontModel === s.id ? "#000" : "#fff",
+                      color: frontModel === s.id ? "#fff" : "#475569", fontWeight: frontModel === s.id ? "600" : "400"
+                    }}
+                    onClick={() => setFrontModel(s.id)}
                   >
                     {s.label}
                   </button>
@@ -84,11 +93,36 @@ export default function CustomizationPanel() {
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
+                {language === "pt" ? "Silhueta da Haste" : "Temple Design"}
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                {[
+                  { id: "aviator", label: "Aviator" },
+                  { id: "wayfarer", label: "Wayfarer" },
+                  { id: "cateye", label: "Cat-Eye" }
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    style={{
+                      padding: "12px 8px", borderRadius: "8px", fontSize: "13px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                      borderColor: templeModel === s.id ? "#000" : "#e2e8f0", background: templeModel === s.id ? "#000" : "#fff",
+                      color: templeModel === s.id ? "#fff" : "#475569", fontWeight: templeModel === s.id ? "600" : "400"
+                    }}
+                    onClick={() => setTempleModel(s.id)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Material da Armação" : "Frame Material"}
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
                 {[
                   { id: "acetate", label: "Acetate", group: "Polymer" },
                   { id: "tr90", label: "TR90", group: "Polymer" },
@@ -100,31 +134,37 @@ export default function CustomizationPanel() {
                 ].map((m) => (
                   <button
                     key={m.id}
-                    className={`py-2 px-3 rounded-lg text-xs text-left border transition-all flex flex-col ${
-                      frameMaterial === m.id ? "border-black bg-gray-50 shadow-sm" : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                    }`}
+                    style={{
+                      padding: "10px 12px", borderRadius: "8px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                      display: "flex", flexDirection: "column", textAlign: "left",
+                      borderColor: frameMaterial === m.id ? "#000" : "#e2e8f0", background: frameMaterial === m.id ? "#f8fafc" : "#fff",
+                    }}
                     onClick={() => setFrameMaterial(m.id)}
                   >
-                    <span className="font-semibold text-gray-900">{m.label}</span>
-                    <span className="text-[10px] text-gray-400">{m.group}</span>
+                    <span style={{ fontWeight: "600", fontSize: "13px", color: "#0f172a" }}>{m.label}</span>
+                    <span style={{ fontSize: "10px", color: "#94a3b8" }}>{m.group}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center justify-between">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
                 {language === "pt" ? "Cores Curadas" : "Curated Colors"}
-                <span className="text-gray-400 font-normal">{color}</span>
+                <span style={{ fontWeight: "normal", color: "#cbd5e1" }}>{color}</span>
               </label>
-              <div className="grid grid-cols-4 gap-3">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
                 {CURATED_COLORS.map((c) => (
                   <button
                     key={c.hex}
-                    className={`w-full aspect-square rounded-full flex items-center justify-center transition-all ${
-                      color === c.hex ? "ring-2 ring-offset-2 ring-black scale-110" : "hover:scale-105 shadow-sm border border-gray-100"
-                    }`}
-                    style={{ backgroundColor: c.hex }}
+                    style={{
+                      width: "100%", aspectRatio: "1", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.2s",
+                      backgroundColor: c.hex,
+                      transform: color === c.hex ? "scale(1.15)" : "scale(1)",
+                      outline: color === c.hex ? "2px solid #000" : "none",
+                      outlineOffset: "2px"
+                    }}
                     onClick={() => setColor(c.hex)}
                     title={c.name}
                   >
@@ -134,11 +174,11 @@ export default function CustomizationPanel() {
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Perfil da Armação" : "Frame Profile"}
               </label>
-              <div className="flex bg-gray-100 p-1 rounded-lg">
+              <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "8px" }}>
                 {[
                   { id: "thin", label: "Thin" },
                   { id: "medium", label: "Medium" },
@@ -146,9 +186,13 @@ export default function CustomizationPanel() {
                 ].map((p) => (
                   <button
                     key={p.id}
-                    className={`flex-1 py-2 text-sm rounded-md transition-all ${
-                      frameProfile === p.id ? "bg-white shadow-sm font-semibold" : "text-gray-500 hover:text-gray-800"
-                    }`}
+                    style={{
+                      flex: 1, padding: "8px", fontSize: "13px", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.2s",
+                      background: frameProfile === p.id ? "#fff" : "transparent",
+                      color: frameProfile === p.id ? "#0f172a" : "#64748b",
+                      fontWeight: frameProfile === p.id ? "600" : "400",
+                      boxShadow: frameProfile === p.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+                    }}
                     onClick={() => setFrameProfile(p.id)}
                   >
                     {p.label}
@@ -162,41 +206,48 @@ export default function CustomizationPanel() {
         {/* --- TAB: LENSES --- */}
         {activeTab === "lenses" && (
           <>
-            <div className="control-group bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <label className="flex items-center justify-between cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${isSunglasses ? "bg-black text-white" : "bg-gray-200 text-gray-500"}`}>
+            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", position: "relative" }}>
+              <label style={{ display: "flex", alignItems: "center", justifyCenter: "space-between", cursor: "pointer", width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                  <div style={{ padding: "8px", borderRadius: "50%", background: isSunglasses ? "#000" : "#e2e8f0", color: isSunglasses ? "#fff" : "#64748b" }}>
                     <Sun size={18} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm">{language === "pt" ? "Lentes Solares" : "Sunglasses Mode"}</h4>
-                    <p className="text-xs text-gray-500">{language === "pt" ? "Adiciona pigmentação escura" : "Adds dark tinting"}</p>
+                    <h4 style={{ margin: 0, fontWeight: "600", fontSize: "14px" }}>{language === "pt" ? "Lentes Solares" : "Sunglasses Mode"}</h4>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>{language === "pt" ? "Adiciona pigmentação escura" : "Adds dark tinting"}</p>
                   </div>
                 </div>
-                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${isSunglasses ? "bg-black" : "bg-gray-300"}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full transition-transform ${isSunglasses ? "translate-x-6" : ""}`} />
+                <div style={{ width: "48px", height: "24px", borderRadius: "12px", padding: "4px", background: isSunglasses ? "#000" : "#cbd5e1", transition: "background 0.3s", position: "relative" }}>
+                  <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#fff", transition: "transform 0.3s", transform: isSunglasses ? "translateX(24px)" : "translateX(0)" }} />
                 </div>
               </label>
               <button 
                 onClick={() => setIsSunglasses(!isSunglasses)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                style={{position: 'absolute', height: 0, width: 0}}
+                style={{ position: 'absolute', inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: "none" }}
               />
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Material da Lente" : "Lens Material"}
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
                 <button
-                  className={`py-3 px-2 rounded-lg text-sm border transition-all ${lensMaterial === "cr39" ? "border-black bg-black text-white" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                  style={{
+                    padding: "12px 8px", borderRadius: "8px", fontSize: "13px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                    borderColor: lensMaterial === "cr39" ? "#000" : "#e2e8f0", background: lensMaterial === "cr39" ? "#000" : "#fff",
+                    color: lensMaterial === "cr39" ? "#fff" : "#475569"
+                  }}
                   onClick={() => setLensMaterial("cr39")}
                 >
                   CR-39 (Standard)
                 </button>
                 <button
-                  className={`py-3 px-2 rounded-lg text-sm border transition-all ${lensMaterial === "polycarbonate" ? "border-black bg-black text-white" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                  style={{
+                    padding: "12px 8px", borderRadius: "8px", fontSize: "13px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                    borderColor: lensMaterial === "polycarbonate" ? "#000" : "#e2e8f0", background: lensMaterial === "polycarbonate" ? "#000" : "#fff",
+                    color: lensMaterial === "polycarbonate" ? "#fff" : "#475569"
+                  }}
                   onClick={() => setLensMaterial("polycarbonate")}
                 >
                   Polycarbonate
@@ -204,11 +255,11 @@ export default function CustomizationPanel() {
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Tratamentos (Coating)" : "Lens Treatments"}
               </label>
-              <div className="space-y-2">
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {[
                   { id: "anti_reflective", icon: <Layers size={16}/>, label: "Anti-Reflective" },
                   { id: "uv_protection", icon: <Sun size={16}/>, label: "UV Protection" },
@@ -222,17 +273,18 @@ export default function CustomizationPanel() {
                     <button
                       key={t.id}
                       onClick={() => toggleLensTreatment(t.id)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        isActive ? "border-black bg-gray-50" : "border-gray-100 hover:border-gray-300"
-                      }`}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "8px", border: "1px solid", cursor: "pointer", transition: "all 0.2s",
+                        borderColor: isActive ? "#000" : "#f1f5f9", background: isActive ? "#f8fafc" : "#fff",
+                      }}
                     >
-                      <div className={`p-1.5 rounded-md ${isActive ? "bg-black text-white" : "bg-gray-100 text-gray-500"}`}>
+                      <div style={{ padding: "6px", borderRadius: "6px", background: isActive ? "#000" : "#f1f5f9", color: isActive ? "#fff" : "#64748b" }}>
                         {t.icon}
                       </div>
-                      <span className={`text-sm font-medium ${isActive ? "text-black" : "text-gray-600"}`}>
+                      <span style={{ fontSize: "13px", fontWeight: "500", color: isActive ? "#000" : "#475569" }}>
                         {t.label}
                       </span>
-                      {isActive && <Check size={16} className="ml-auto text-black" />}
+                      {isActive && <Check size={16} color="#000" style={{ marginLeft: "auto" }} />}
                     </button>
                   );
                 })}
@@ -244,31 +296,33 @@ export default function CustomizationPanel() {
         {/* --- TAB: DETAILS --- */}
         {activeTab === "details" && (
           <>
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
                 {language === "pt" ? "Abertura da Haste" : "Temple Fold"}
-                <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{(templeOpen * 100).toFixed(0)}</span>
+                <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#475569" }}>{(templeOpen * 100).toFixed(0)}</span>
               </label>
               <input 
                 type="range" 
-                min="-0.05" 
-                max="0.65" 
-                step="0.01" 
+                min="-0.05" max="0.65" step="0.01" 
                 value={templeOpen} 
                 onChange={(e) => setTempleOpen(parseFloat(e.target.value))}
-                className="w-full accent-black"
+                style={{ width: "100%", accentColor: "#000", cursor: "pointer" }}
               />
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Material das Plaquetas" : "Nose Pad Material"}
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {["silicone", "titanium", "acetate"].map(m => (
                   <button
                     key={m}
-                    className={`py-2 px-1 text-xs font-medium border rounded-md capitalize transition-all ${nosePadMaterial === m ? "border-black bg-black text-white" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                    style={{
+                      padding: "8px 4px", fontSize: "12px", fontWeight: "500", border: "1px solid", borderRadius: "6px", textTransform: "capitalize", cursor: "pointer", transition: "all 0.2s",
+                      borderColor: nosePadMaterial === m ? "#000" : "#e2e8f0", background: nosePadMaterial === m ? "#000" : "#fff",
+                      color: nosePadMaterial === m ? "#fff" : "#475569"
+                    }}
                     onClick={() => setNosePadMaterial(m)}
                   >
                     {m}
@@ -277,15 +331,19 @@ export default function CustomizationPanel() {
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Material da Ponteira" : "Temple Tip Material"}
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {["acetate", "silicone", "rubber"].map(m => (
                   <button
                     key={m}
-                    className={`py-2 px-1 text-xs font-medium border rounded-md capitalize transition-all ${templeTipMaterial === m ? "border-black bg-black text-white" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                    style={{
+                      padding: "8px 4px", fontSize: "12px", fontWeight: "500", border: "1px solid", borderRadius: "6px", textTransform: "capitalize", cursor: "pointer", transition: "all 0.2s",
+                      borderColor: templeTipMaterial === m ? "#000" : "#e2e8f0", background: templeTipMaterial === m ? "#000" : "#fff",
+                      color: templeTipMaterial === m ? "#fff" : "#475569"
+                    }}
                     onClick={() => setTempleTipMaterial(m)}
                   >
                     {m}
@@ -294,15 +352,19 @@ export default function CustomizationPanel() {
               </div>
             </div>
 
-            <div className="control-group">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+            <div>
+              <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "block" }}>
                 {language === "pt" ? "Material da Dobradiça" : "Hinge Material"}
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {["stainless_steel", "titanium", "gold"].map(m => (
                   <button
                     key={m}
-                    className={`py-2 px-1 text-xs font-medium border rounded-md capitalize transition-all ${hingeMaterial === m ? "border-black bg-black text-white" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}
+                    style={{
+                      padding: "8px 4px", fontSize: "12px", fontWeight: "500", border: "1px solid", borderRadius: "6px", textTransform: "capitalize", cursor: "pointer", transition: "all 0.2s",
+                      borderColor: hingeMaterial === m ? "#000" : "#e2e8f0", background: hingeMaterial === m ? "#000" : "#fff",
+                      color: hingeMaterial === m ? "#fff" : "#475569"
+                    }}
                     onClick={() => setHingeMaterial(m)}
                   >
                     {m.replace('_', ' ')}
@@ -312,6 +374,24 @@ export default function CustomizationPanel() {
             </div>
           </>
         )}
+      </div>
+
+      {/* Footer Actions */}
+      <div style={{ padding: "16px 24px", borderTop: "1px solid #eaeaea", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)", display: "flex", gap: "12px", flexShrink: 0 }}>
+        <button 
+          style={{ flex: 1, padding: "12px", borderRadius: "10px", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "#f1f5f9", color: "#0f172a", border: "1px solid #e2e8f0", cursor: "pointer" }}
+          onClick={onSave}
+        >
+          <Download size={16} />
+          {language === "pt" ? "Salvar" : "Save"}
+        </button>
+        <button 
+          style={{ flex: 1.5, padding: "12px", borderRadius: "10px", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "#2563eb", color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)" }}
+          onClick={onOrder}
+        >
+          <Sparkles size={16} />
+          {language === "pt" ? "Produzir" : "Produce"}
+        </button>
       </div>
     </div>
   );

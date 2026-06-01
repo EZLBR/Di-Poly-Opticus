@@ -7,7 +7,7 @@ import { X, Sparkles, Check, ShoppingBag } from "lucide-react";
 
 export function SaveDesignModal({ isOpen, onClose, onOpenDesigns }) {
   const {
-    model, frameProfile, frameMaterial, color,
+    frontModel, templeModel, frameProfile, frameMaterial, color,
     isSunglasses, lensMaterial, lensTreatments,
     nosePadMaterial, templeTipMaterial, hingeMaterial,
     templeOpen, prescriptionFileName, showToast
@@ -39,7 +39,9 @@ export function SaveDesignModal({ isOpen, onClose, onOpenDesigns }) {
       const newDesign = {
         id: finalId,
         name: cleanName,
-        model,
+        model: `${frontModel}_front_${templeModel}_temples`, // Legacy compatibility
+        frontModel,
+        templeModel,
         color,
         isSunglasses,
         antiReflective: lensTreatments.includes("anti_reflective"), // Legacy support
@@ -63,9 +65,6 @@ export function SaveDesignModal({ isOpen, onClose, onOpenDesigns }) {
         updatedAt: new Date().toISOString()
       };
 
-      // Se quiser plugar no backend PostgreSQL:
-      // O backend pode não ter colunas pra todos os materiais ainda.
-      // O payload mínimo está sendo enviado.
       try {
         const backendRes = await saveDesign({
           id: finalId.startsWith("design-") ? null : finalId,
@@ -149,7 +148,7 @@ export function SaveDesignModal({ isOpen, onClose, onOpenDesigns }) {
 
 export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
   const {
-    model, frameProfile, frameMaterial, color,
+    frontModel, templeModel, frameProfile, frameMaterial, color,
     isSunglasses, lensMaterial, lensTreatments,
     nosePadMaterial, templeTipMaterial, hingeMaterial,
     prescriptionFileName, showToast
@@ -167,9 +166,9 @@ export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
 
   const handleOrderSubmission = async () => {
     const factoryMap = {
-      "factory-rayban": "Ray-Ban Premium Production",
+      "factory-rayban": "Ray-Ban Premium Production (S.P. Facility)",
       "factory-oakley": "Oakley Advanced Sports Extrusion",
-      "factory-demo": "Demo Manufacturing Lab"
+      "factory-demo": "Demo Manufacturing Lab (Fast SLA)"
     };
 
     let basePrice = 180;
@@ -181,13 +180,15 @@ export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
 
     const orderData = {
       customerName: session ? session.name : "Custom Client",
-      productName: `Customized ${frameMaterial.toUpperCase()} ${model.toUpperCase()}`,
+      productName: `Customized ${frameMaterial.toUpperCase()} ${frontModel.toUpperCase()} + ${templeModel.toUpperCase()} TEMPLES`,
       factoryId: selectedFactory,
       factoryName: factoryMap[selectedFactory],
       status: "Queued",
       total: basePrice,
       customSpecs: {
-        model, color, profile: frameProfile,
+        model: `${frontModel}_front_${templeModel}_temples`,
+        frontModel, templeModel,
+        color, profile: frameProfile,
         frameMaterial, lensMaterial, lensTreatments,
         nosePadMaterial, templeTipMaterial, hingeMaterial,
         isSunglasses,
@@ -209,7 +210,7 @@ export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
     <div className="modal open" style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
       <div className="modal-card" style={{ maxWidth: "480px" }}>
         <div className="modal-head" style={{ borderBottom: "1px solid var(--glass-card-border)", paddingBottom: "12px" }}>
-          <h3>{language === "pt" ? "ENCOMENDA DE FÁBRICA" : "DISPATCH FACTORY ORDER"}</h3>
+          <h3>{language === "pt" ? "ENCOMENDA ENVIADA!" : "DISPATCH FACTORY ORDER"}</h3>
           <button className="modal-close" onClick={onClose}><X size={18} /></button>
         </div>
 
@@ -223,7 +224,8 @@ export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
 
             <div style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", padding: "14px", borderRadius: "8px", marginBottom: "20px", boxShadow: "var(--shadow)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "12px" }}>
-                <div><span style={{ color: "var(--color-hint)" }}>Silhouette:</span> <strong style={{ color: "var(--text-dark)" }}>{model.toUpperCase()}</strong></div>
+                <div><span style={{ color: "var(--color-hint)" }}>Front:</span> <strong style={{ color: "var(--text-dark)" }}>{frontModel.toUpperCase()}</strong></div>
+                <div><span style={{ color: "var(--color-hint)" }}>Temples:</span> <strong style={{ color: "var(--text-dark)" }}>{templeModel.toUpperCase()}</strong></div>
                 <div><span style={{ color: "var(--color-hint)" }}>Material:</span> <strong style={{ color: "var(--text-dark)" }}>{frameMaterial.toUpperCase()}</strong></div>
                 <div><span style={{ color: "var(--color-hint)" }}>Color:</span> <strong style={{ color: "var(--text-dark)" }}>{color.toUpperCase()}</strong></div>
                 <div><span style={{ color: "var(--color-hint)" }}>Lenses:</span> <strong style={{ color: "var(--text-dark)" }}>{lensMaterial.toUpperCase()}</strong></div>
@@ -252,7 +254,7 @@ export function OrderModal({ isOpen, onClose, onGoToDashboard }) {
               <button type="button" className="btn" style={{ flex: 1 }} onClick={onClose}>
                 CANCEL
               </button>
-              <button type="button" className="btn primary animate-pulse" style={{ flex: 1, display: "flex", alignItems: "center", justifyCenter: "center", gap: "6px" }} onClick={handleOrderSubmission}>
+              <button type="button" className="btn primary animate-pulse" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }} onClick={handleOrderSubmission}>
                 <ShoppingBag size={14} /> PLACE ORDER
               </button>
             </div>

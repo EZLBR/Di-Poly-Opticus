@@ -15,7 +15,8 @@ export function CreatorStudioProvider({ children }) {
   const [environment, setEnvironment] = useState("studio");
 
   // --- Basic Silhouette & Geometry ---
-  const [model, setModel] = useState("aviator"); // aviator, wayfarer, cateye
+  const [frontModel, setFrontModel] = useState("aviator"); // aviator, wayfarer, cateye
+  const [templeModel, setTempleModel] = useState("aviator"); // aviator, wayfarer, cateye
   const [frameProfile, setFrameProfile] = useState("medium"); // thin, medium, bold
   const [templeOpen, setTempleOpen] = useState(0.22); // leg fold: -0.05 to 0.65
 
@@ -60,7 +61,9 @@ export function CreatorStudioProvider({ children }) {
         const draft = JSON.parse(draftRaw);
         if (draft && draft.config) {
           const c = draft.config;
-          if (c.model) setModel(c.model);
+          if (c.frontModel) setFrontModel(c.frontModel);
+          else if (c.model) { setFrontModel(c.model); setTempleModel(c.model); } // Legacy
+          if (c.templeModel) setTempleModel(c.templeModel);
           if (c.frameProfile) setFrameProfile(c.frameProfile);
           if (c.frameMaterial) setFrameMaterial(c.frameMaterial);
           if (c.color) setColor(c.color);
@@ -80,7 +83,7 @@ export function CreatorStudioProvider({ children }) {
 
   useEffect(() => {
     const configState = {
-      model, frameProfile, frameMaterial, color,
+      frontModel, templeModel, frameProfile, frameMaterial, color,
       isSunglasses, lensMaterial, lensTreatments,
       nosePadMaterial, templeTipMaterial, hingeMaterial
     };
@@ -92,7 +95,7 @@ export function CreatorStudioProvider({ children }) {
     localStorage.setItem("opticus_creator_draft", JSON.stringify(draftPayload));
     setDraftStatus("Autosaved locally");
   }, [
-    model, frameProfile, frameMaterial, color,
+    frontModel, templeModel, frameProfile, frameMaterial, color,
     isSunglasses, lensMaterial, lensTreatments,
     nosePadMaterial, templeTipMaterial, hingeMaterial
   ]);
@@ -106,7 +109,8 @@ export function CreatorStudioProvider({ children }) {
     environment, setEnvironment,
     
     // Geometry State
-    model, setModel,
+    frontModel, setFrontModel,
+    templeModel, setTempleModel,
     frameProfile, setFrameProfile,
     templeOpen, setTempleOpen,
 

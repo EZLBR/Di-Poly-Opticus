@@ -33,6 +33,13 @@ export default function AuthPage({ setView }) {
       setLoginLoading(false);
 
       if (result.ok) {
+        const redirect = localStorage.getItem("opticus_redirect_after_login");
+        if (redirect) {
+          localStorage.removeItem("opticus_redirect_after_login");
+          setView(redirect);
+          return;
+        }
+
         if (result.role === "client") setView("marketplace");
         else if (result.role === "factory") setView("factory-dashboard");
         else if (result.role === "staff") setView("staff-dashboard");
@@ -77,6 +84,13 @@ export default function AuthPage({ setView }) {
       if (result.ok) {
         setSignupSuccess("Account created. Opening your workspace...");
         setTimeout(() => {
+          const redirect = localStorage.getItem("opticus_redirect_after_login");
+          if (redirect) {
+            localStorage.removeItem("opticus_redirect_after_login");
+            setView(redirect);
+            return;
+          }
+
           if (result.role === "client") setView("marketplace");
           else if (result.role === "factory") setView("factory-dashboard");
           else if (result.role === "staff") setView("staff-dashboard");

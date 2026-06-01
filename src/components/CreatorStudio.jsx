@@ -1,105 +1,133 @@
 import React, { useState } from "react";
 import { useTranslation } from "../contexts/LanguageContext";
 import { CreatorStudioProvider, useCreatorStudio } from "../contexts/CreatorStudioContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
 
 import ThreePreview from "./creator/ThreePreview";
 import TryOnViewport from "./creator/TryOnViewport";
 import CustomizationPanel from "./creator/CustomizationPanel";
-import { SaveDesignModal, OrderModal } from "./creator/CreatorModals";
+import { SaveDesignModal } from "./creator/CreatorModals";
 
 import { ArrowLeft, Sparkles, Box, Camera, Download } from "lucide-react";
 
 function CreatorStudioInner({ setView, onOpenDesigns }) {
   const {
+    frontModel, templeModel, frameProfile, frameMaterial, color,
+    isSunglasses, lensMaterial, lensTreatments,
+    nosePadMaterial, templeTipMaterial, hingeMaterial,
+    prescriptionFileName,
     activeStep, setActiveStep,
     tryOnMode, setTryOnMode,
-    statusMessage,
+    statusMessage, showToast,
     environment, setEnvironment
   } = useCreatorStudio();
 
   const { language, t } = useTranslation();
+  const { session } = useAuth();
+  const { checkoutCart, addToCart } = useCart();
 
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showOrderModal, setShowOrderModal] = useState(false);
+
+  const handleProduceClick = async () => {
+    let basePrice = 180;
+    if (isSunglasses) basePrice += 40;
+    if (frameProfile === "bold") basePrice += 20;
+    if (lensTreatments.length > 0) basePrice += (lensTreatments.length * 15);
+    if (frameMaterial === "titanium" || frameMaterial === "gold" || frameMaterial === "carbon_fiber") basePrice += 80;
+    if (lensMaterial === "polycarbonate") basePrice += 30;
+
+    const orderData = {
+      id: `custom-${Date.now()}`,
+      productName: `Customized ${frameMaterial.toUpperCase()} ${frontModel.toUpperCase()}`,
+      total: basePrice,
+      quantity: 1,
+      customSpecs: {
+        frontModel, templeModel,
+        color, profile: frameProfile,
+        frameMaterial, lensMaterial, lensTreatments,
+        nosePadMaterial, templeTipMaterial, hingeMaterial,
+        isSunglasses,
+        prescriptionUploaded: !!prescriptionFileName
+      }
+    };
+
+    if (!session) {
+      addToCart(orderData);
+      localStorage.setItem("opticus_redirect_after_login", "cart");
+      showToast(language === "pt" ? "Faça login para continuar o pagamento." : "Please log in to continue payment.");
+      setView("login");
+      return;
+    }
+
+    try {
+      showToast(language === "pt" ? "Redirecionando para pagamento..." : "Redirecting to payment...");
+      const result = await checkoutCart([orderData]);
+      if (result && result.success) {
+        if (result.isOffline) {
+          showToast(language === "pt" ? "Pedido enfileirado (Modo Offline)" : "Order queued (Offline mode)");
+          setView("marketplace");
+        } else if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+        }
+      } else {
+        showToast("Error processing order.");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Error starting payment.");
+    }
+  };
 
   return (
-    <div className="page-create h-screen flex flex-col overflow-hidden bg-gray-50">
+    <div className="page-create" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", backgroundColor: "#f8fbff" }}>
       
       {/* Toast Notifier */}
       {statusMessage && (
-        <div className="fixed bottom-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl text-white z-50 flex items-center gap-3 shadow-2xl animate-slide-up">
-          <Sparkles size={18} className="text-blue-400" />
-          <span className="font-semibold text-sm">{statusMessage}</span>
+        <div style={{
+          position: "fixed", bottom: "30px", right: "30px", background: "rgba(255, 255, 255, 0.08)",
+          backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.15)",
+          padding: "16px 24px", borderRadius: "8px", color: "#111", zIndex: 1000,
+          display: "flex", alignItems: "center", gap: "10px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+        }}>
+          <Sparkles size={18} style={{ color: "var(--primary-accent)" }} />
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>{statusMessage}</span>
         </div>
       )}
 
-      {/* Header NavBar */}
-      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 z-40">
-        <div className="flex items-center gap-6">
-          <button 
-            className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-black transition-colors"
-            onClick={() => setView("marketplace")}
-          >
-            <ArrowLeft size={16} />
-            {t("nav-explore")}
-          </button>
-          
-          <div className="h-6 w-px bg-gray-200"></div>
-          
-          <h1 className="text-sm font-bold tracking-widest uppercase">
-            {language === "pt" ? "Estúdio 3D Avançado" : "Advanced 3D Studio"}
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button 
-            className="text-xs font-semibold uppercase tracking-wider px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => {
-              localStorage.setItem("opticus_show_designs_modal", "true");
-              setView("marketplace");
-            }}
-          >
-            {t("btn-open-saved")}
-          </button>
-          
-          <button 
-            className="text-xs font-semibold uppercase tracking-wider px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 flex items-center gap-2"
-            onClick={() => setShowSaveModal(true)}
-          >
-            <Download size={14} />
-            {language === "pt" ? "Salvar" : "Save"}
-          </button>
-          
-          <button 
-            className="text-xs font-semibold uppercase tracking-wider px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 flex items-center gap-2"
-            onClick={() => setShowOrderModal(true)}
-          >
-            <Sparkles size={14} />
-            {language === "pt" ? "Produzir" : "Produce"}
-          </button>
-        </div>
-      </header>
-
       {/* Main Workspace */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative", paddingTop: "85px" }}>
         
         {/* Left Side: 3D / AR Viewport */}
-        <div className="flex-1 relative flex flex-col">
+        <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
+          
           {/* Top Toolbar overlay */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-gray-100">
+          <div style={{
+            position: "absolute", top: "24px", left: "50%", transform: "translateX(-50%)", zIndex: 20,
+            display: "flex", gap: "8px", background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
+            padding: "6px", borderRadius: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)", border: "1px solid #eaeaea"
+          }}>
             <button
-              className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
-                !tryOnMode ? "bg-white shadow-sm text-black" : "text-gray-500 hover:text-gray-900"
-              }`}
+              style={{
+                padding: "8px 24px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px",
+                display: "flex", alignItems: "center", gap: "8px", border: "none", cursor: "pointer", transition: "all 0.2s",
+                background: !tryOnMode ? "#fff" : "transparent",
+                color: !tryOnMode ? "#000" : "#666",
+                boxShadow: !tryOnMode ? "0 2px 8px rgba(0,0,0,0.1)" : "none"
+              }}
               onClick={() => setTryOnMode(false)}
             >
               <Box size={14} />
               {language === "pt" ? "Renderização 3D" : "3D Render"}
             </button>
             <button
-              className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
-                tryOnMode ? "bg-white shadow-sm text-black" : "text-gray-500 hover:text-gray-900"
-              }`}
+              style={{
+                padding: "8px 24px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px",
+                display: "flex", alignItems: "center", gap: "8px", border: "none", cursor: "pointer", transition: "all 0.2s",
+                background: tryOnMode ? "#fff" : "transparent",
+                color: tryOnMode ? "#000" : "#666",
+                boxShadow: tryOnMode ? "0 2px 8px rgba(0,0,0,0.1)" : "none"
+              }}
               onClick={() => setTryOnMode(true)}
             >
               <Camera size={14} />
@@ -107,22 +135,30 @@ function CreatorStudioInner({ setView, onOpenDesigns }) {
             </button>
           </div>
 
-          {/* Environment Switcher (only for 3D) */}
+          {/* Environment Switcher */}
           {!tryOnMode && (
-            <div className="absolute bottom-6 left-6 z-20 flex flex-col gap-2 bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-gray-100">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 pt-1">
+            <div style={{
+              position: "absolute", bottom: "24px", left: "24px", zIndex: 20, display: "flex", flexDirection: "column", gap: "8px",
+              background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", padding: "10px", borderRadius: "16px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.05)", border: "1px solid #eaeaea"
+            }}>
+              <span style={{ fontSize: "10px", fontWeight: "bold", color: "#aaa", textTransform: "uppercase", letterSpacing: "1px", padding: "0 8px" }}>
                 {language === "pt" ? "Cenário" : "Environment"}
               </span>
-              <div className="flex gap-1">
+              <div style={{ display: "flex", gap: "4px" }}>
                 <button
-                  className={`w-8 h-8 rounded-xl transition-all ${environment === "studio" ? "ring-2 ring-black" : "hover:bg-gray-200"}`}
-                  style={{ backgroundColor: "#f8fbff" }}
+                  style={{
+                    width: "32px", height: "32px", borderRadius: "8px", border: environment === "studio" ? "2px solid #000" : "1px solid #ccc",
+                    background: "#f8fbff", cursor: "pointer"
+                  }}
                   onClick={() => setEnvironment("studio")}
                   title="Studio Lighting"
                 />
                 <button
-                  className={`w-8 h-8 rounded-xl transition-all ${environment === "wood" ? "ring-2 ring-black" : "hover:bg-gray-200"}`}
-                  style={{ backgroundColor: "#3d2713" }}
+                  style={{
+                    width: "32px", height: "32px", borderRadius: "8px", border: environment === "wood" ? "2px solid #000" : "1px solid #ccc",
+                    background: "#3d2713", cursor: "pointer"
+                  }}
                   onClick={() => setEnvironment("wood")}
                   title="Dark Wood"
                 />
@@ -131,20 +167,20 @@ function CreatorStudioInner({ setView, onOpenDesigns }) {
           )}
 
           {/* Viewport Layer */}
-          <div className="flex-1 relative w-full h-full">
-            <div className={`absolute inset-0 transition-opacity duration-500 ${tryOnMode ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <div style={{ flex: 1, position: "relative", width: "100%", height: "100%" }}>
+            <div style={{ position: "absolute", inset: 0, opacity: tryOnMode ? 0 : 1, pointerEvents: tryOnMode ? "none" : "auto", transition: "opacity 0.5s" }}>
               <ThreePreview />
             </div>
             
-            <div className={`absolute inset-0 transition-opacity duration-500 ${!tryOnMode ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+            <div style={{ position: "absolute", inset: 0, opacity: !tryOnMode ? 0 : 1, pointerEvents: !tryOnMode ? "none" : "auto", transition: "opacity 0.5s" }}>
               {tryOnMode && <TryOnViewport />}
             </div>
           </div>
         </div>
 
         {/* Right Side: Customization Panel */}
-        <aside className="w-[400px] h-full shrink-0 relative z-30">
-          <CustomizationPanel />
+        <aside style={{ width: "400px", height: "100%", flexShrink: 0, position: "relative", zIndex: 30 }}>
+          <CustomizationPanel onSave={() => setShowSaveModal(true)} onOrder={handleProduceClick} />
         </aside>
 
       </main>
@@ -154,11 +190,6 @@ function CreatorStudioInner({ setView, onOpenDesigns }) {
         isOpen={showSaveModal} 
         onClose={() => setShowSaveModal(false)} 
         onOpenDesigns={onOpenDesigns}
-      />
-      <OrderModal 
-        isOpen={showOrderModal} 
-        onClose={() => setShowOrderModal(false)}
-        onGoToDashboard={() => setView("factory-dashboard")}
       />
     </div>
   );
