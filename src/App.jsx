@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import { useCart } from "./contexts/CartContext";
 import Navbar from "./components/Navbar";
 import { useTranslation } from "./contexts/LanguageContext";
 import { Check, X } from "lucide-react";
@@ -15,7 +16,8 @@ const Cart = lazy(() => import("./components/Cart"));
 
 function AppContent() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const { session, clearCart } = useAuth();
+  const { session } = useAuth();
+  const { clearCart } = useCart();
   const { language } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
