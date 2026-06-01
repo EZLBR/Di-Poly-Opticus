@@ -353,8 +353,4 @@ export async function checkoutCart(req, res) {
       billingId:   consolidatedBillingId
     });
 
-  } catch (err) {
-    console.error("Erro no checkout:", err);
-    return res.status(500).json({ success: false, error: "Falha no checkout." });
-  }
 }

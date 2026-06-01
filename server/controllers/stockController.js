@@ -11,7 +11,7 @@ import pool from "../config/db.js";
 // ─────────────────────────────────────────────────────────
 export async function getAllStock(req, res) {
   try {
-    const { rows:  } = await pool.query(
+    const { rows } = await pool.query(
       `SELECT
         e.id,
         e.produto_id,
@@ -54,7 +54,7 @@ export async function getStockByProduct(req, res) {
   const { produtoId } = req.params;
 
   try {
-    const { rows:  } = await pool.query(
+    const { rows } = await pool.query(
       `SELECT e.*, p.nome AS produto_nome, p.preco
        FROM estoque e
        INNER JOIN produtos p ON p.id = e.produto_id
@@ -103,7 +103,7 @@ export async function updateStock(req, res) {
 
   try {
     // Busca estoque atual
-    const { rows:  } = await pool.query(
+    const { rows: current } = await pool.query(
       "SELECT quantidade FROM estoque WHERE produto_id = $1",
       [produtoId]
     );
@@ -135,21 +135,21 @@ export async function updateStock(req, res) {
     }
 
     // Atualiza o estoque
-    const updateFields = ["quantidade = ?"];
+    let setClause = "quantidade = $1";
     const updateParams = [novaQtd];
 
     if (estoque_minimo !== undefined) {
-      updateFields.push("estoque_minimo = ?");
+      setClause += ", estoque_minimo = $2";
       updateParams.push(Number(estoque_minimo));
     }
 
     await pool.query(
-      `UPDATE estoque SET ${updateFields.join(", ")} WHERE produto_id = ?`,
+      `UPDATE estoque SET ${setClause} WHERE produto_id = $${updateParams.length + 1}`,
       [...updateParams, produtoId]
     );
 
     // Retorna o estoque atualizado
-    const { rows:  } = await pool.query(
+    const { rows: updated } = await pool.query(
       `SELECT e.*, p.nome AS produto_nome
        FROM estoque e
        INNER JOIN produtos p ON p.id = e.produto_id
@@ -181,7 +181,7 @@ export async function updateStock(req, res) {
 // ─────────────────────────────────────────────────────────
 export async function getStockAlerts(req, res) {
   try {
-    const { rows:  } = await pool.query(
+    const { rows } = await pool.query(
       `SELECT
         e.produto_id,
         p.nome         AS produto_nome,

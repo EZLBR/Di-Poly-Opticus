@@ -5,6 +5,7 @@
 // ============================================================
 
 import pool from "../config/db.js";
+import crypto from "crypto";
 
 // Security Helper
 const escapeHTML = (str) => {
@@ -162,6 +163,20 @@ export async function handleWebhook(req, res) {
   const payload = req.body;
   console.log("[Webhook] Payload recebido:", JSON.stringify(payload));
 
+  const payloadString = JSON.stringify(req.body);
+  const signature = req.headers["x-abacatepay-signature"];
+
+  if (ABACATE_TOKEN && !ABACATE_TOKEN.includes("your_abacatepay")) {
+    if (!signature) {
+      return res.status(401).json({ success: false, error: "Assinatura ausente" });
+    }
+    const expected = crypto.createHmac("sha256", ABACATE_TOKEN).update(payloadString).digest("hex");
+    if (signature !== expected) {
+      console.warn("[Webhook] Assinatura inválida");
+      // Uncomment to enforce: return res.status(401).json({ success: false, error: "Assinatura inválida" });
+    }
+  }
+
   try {
     if (payload.event === "billing.paid" && payload.data?.id) {
       const billingId = payload.data.id;
@@ -302,7 +317,14 @@ export async function confirmSimulatedPayment(req, res) {
 
     let redirectUrl = "http://localhost:5173/?payment=success";
     if (returnTo) {
-      redirectUrl = `${returnTo}/?payment=success`;
+      try {
+        const url = new URL(returnTo);
+        if (url.hostname === "localhost" || url.hostname.endsWith("vercel.app")) {
+          redirectUrl = `${returnTo}/?payment=success`;
+        }
+      } catch (e) {
+        console.warn("Invalid returnTo URL");
+      }
     }
 
     return res.redirect(redirectUrl);

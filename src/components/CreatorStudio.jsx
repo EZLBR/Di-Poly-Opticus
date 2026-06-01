@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useAuth } from "../contexts/AuthContext";
@@ -36,7 +36,7 @@ const CURATED_COLORS = [
 
 export default function CreatorStudio({ setView, onOpenDesigns }) {
   const { session, designs, saveDesign, isBackendConnected } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, checkoutCart } = useCart();
   const { t, language } = useTranslation();
 
   // --- Step navigation ---
@@ -1295,7 +1295,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       if (isBackendConnected) {
         const isLocalStringId = typeof finalId === "string" && finalId.startsWith("design-");
         
-        const backendRes = await saveBackendDesign({
+        const backendRes = await saveDesign({
           id: isLocalStringId ? null : finalId,
           name: newDesign.name,
           model: newDesign.model,
@@ -1341,7 +1341,7 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
   };
 
   // Order submission
-  const handleOrderSubmission = () => {
+  const handleOrderSubmission = async () => {
     const factoryMap = {
       "factory-rayban": "Ray-Ban Factory",
       "factory-oakley": "Oakley Factory",
@@ -1373,11 +1373,13 @@ export default function CreatorStudio({ setView, onOpenDesigns }) {
       }
     };
 
-    const result = placeOrder(orderData);
-    if (result && result.id) {
-      setCreatedOrderNumber(result.id);
+    const result = await checkoutCart([orderData]);
+    if (result && result.success && result.createdOrders && result.createdOrders.length > 0) {
+      setCreatedOrderNumber(result.createdOrders[0].id);
       setOrderSuccess(true);
-      showToast(language === "pt" ? "Pedido encaminhado ├á f├íbrica!" : "Order dispatched to factory!");
+      showToast(language === "pt" ? "Pedido encaminhado à fábrica!" : "Order dispatched to factory!");
+    } else {
+      showToast(language === "pt" ? "Falha ao criar o pedido." : "Failed to place order.");
     }
   };
 

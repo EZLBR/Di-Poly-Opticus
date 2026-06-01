@@ -18,7 +18,7 @@ export async function createCategory(req, res) {
 
   try {
     // Verifica se já existe uma categoria com esse nome
-    const { rows:  } = await pool.query(
+    const { rows: existing } = await pool.query(
       "SELECT id FROM categorias WHERE nome = $1",
       [nome.trim()]
     );
@@ -27,17 +27,17 @@ export async function createCategory(req, res) {
       return res.status(400).json({ success: false, error: "Já existe uma categoria com esse nome." });
     }
 
-    const { rows:  } = await pool.query(
-      "INSERT INTO categorias (nome, descricao) VALUES (?, ?)",
+    const { rows } = await pool.query(
+      "INSERT INTO categorias (nome, descricao) VALUES ($1, $2) RETURNING id",
       [nome.trim(), descricao || null]
     );
 
-    const { rows:  } = await pool.query(
+    const { rows: newRows } = await pool.query(
       "SELECT * FROM categorias WHERE id = $1",
-      [result.insertId]
+      [rows[0].id]
     );
 
-    return res.status(201).json({ success: true, categoria: rows[0] });
+    return res.status(201).json({ success: true, categoria: newRows[0] });
 
   } catch (err) {
     console.error("Erro ao criar categoria:", err);
@@ -52,7 +52,7 @@ export async function createCategory(req, res) {
 export async function getCategories(req, res) {
   try {
     // LEFT JOIN + COUNT para mostrar quantos produtos há em cada categoria
-    const { rows:  } = await pool.query(
+    const { rows } = await pool.query(
       `SELECT
         c.id,
         c.nome,
@@ -82,7 +82,7 @@ export async function getCategoryById(req, res) {
 
   try {
     // Categoria
-    const { rows:  } = await pool.query(
+    const { rows: catRows } = await pool.query(
       "SELECT * FROM categorias WHERE id = $1",
       [id]
     );
@@ -92,7 +92,7 @@ export async function getCategoryById(req, res) {
     }
 
     // Produtos desta categoria
-    const { rows:  } = await pool.query(
+    const { rows: prodRows } = await pool.query(
       "SELECT id, nome, preco, imagem_url, ativo FROM produtos WHERE categoria_id = $1 AND ativo = TRUE",
       [id]
     );
@@ -121,16 +121,16 @@ export async function updateCategory(req, res) {
   }
 
   try {
-    const { rows:  } = await pool.query(
+    const result = await pool.query(
       "UPDATE categorias SET nome = $1, descricao = $2 WHERE id = $3",
       [nome.trim(), descricao || null, id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, error: "Categoria não encontrada." });
     }
 
-    const { rows:  } = await pool.query("SELECT * FROM categorias WHERE id = $1", [id]);
+    const { rows } = await pool.query("SELECT * FROM categorias WHERE id = $1", [id]);
 
     return res.json({ success: true, categoria: rows[0] });
 
@@ -149,8 +149,8 @@ export async function deleteCategory(req, res) {
 
   try {
     // Verifica se existem produtos usando esta categoria
-    const { rows:  } = await pool.query(
-      "SELECT COUNT(*) AS total FROM produtos WHERE categoria_id = ? AND ativo = TRUE",
+    const { rows: prods } = await pool.query(
+      "SELECT COUNT(*) AS total FROM produtos WHERE categoria_id = $1 AND ativo = TRUE",
       [id]
     );
 
@@ -161,12 +161,12 @@ export async function deleteCategory(req, res) {
       });
     }
 
-    const { rows:  } = await pool.query(
+    const result = await pool.query(
       "DELETE FROM categorias WHERE id = $1",
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, error: "Categoria não encontrada." });
     }
 
