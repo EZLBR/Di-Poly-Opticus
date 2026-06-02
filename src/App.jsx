@@ -25,13 +25,15 @@ function AppContent() {
 
   // Verifica redirecionamento de pagamento
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success") {
       setShowPaymentSuccess(true);
       clearCart();
-      navigate(location.pathname, { replace: true });
+      // Use window.history to replace URL without triggering React Router re-renders
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [location.search, navigate, clearCart, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Controle de permissões (Roles) e proteção de rotas
   useEffect(() => {
@@ -108,8 +110,11 @@ function AppContent() {
               </h3>
               <button 
                 className="modal-close" 
-                onClick={() => setShowPaymentSuccess(false)}
-                style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPaymentSuccess(false);
+                }}
+                style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
               >
                 <X size={16} />
               </button>
@@ -140,8 +145,11 @@ function AppContent() {
               </p>
               <button 
                 className="btn primary" 
-                style={{ width: "100%", padding: "14px", fontWeight: "600", fontSize: "14px", textTransform: "uppercase", background: "#22c55e", borderColor: "#22c55e", color: "#fff" }} 
-                onClick={() => setShowPaymentSuccess(false)}
+                style={{ width: "100%", padding: "14px", fontWeight: "600", fontSize: "14px", textTransform: "uppercase", background: "#22c55e", borderColor: "#22c55e", color: "#fff", cursor: "pointer" }} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPaymentSuccess(false);
+                }}
               >
                 {language === "pt" ? "CONFIRMAR" : "DISMISS"}
               </button>
