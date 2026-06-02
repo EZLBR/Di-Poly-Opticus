@@ -8,6 +8,7 @@ import pg from "pg";
 const { Pool } = pg;
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import logger from "../utils/logger.js";
 dotenv.config();
 
 const poolConfig = process.env.DATABASE_URL 
@@ -53,7 +54,7 @@ async function createIndexIfNotExists(tableName, indexName, indexDef) {
 export async function initializeDatabase() {
   try {
     const { rows: infoRows } = await pool.query("SELECT NOW() AS agora, version() AS versao");
-    console.log(`✅ PostgreSQL conectado — versão ${infoRows[0].versao.split(" ")[1]} (${infoRows[0].agora})`);
+    logger.info(`✅ PostgreSQL conectado — versão ${infoRows[0].versao.split(" ")[1]} (${infoRows[0].agora})`);
 
     // ── TABELA: categorias ────────────────────────────────
     await pool.query(`
@@ -186,7 +187,7 @@ export async function initializeDatabase() {
       )
     `);
 
-    console.log("✅ Tabelas verificadas/criadas com sucesso no PostgreSQL.");
+    logger.info("✅ Tabelas verificadas/criadas com sucesso no PostgreSQL.");
 
     const indexes = [
       ["produtos",      "idx_produtos_categoria",  "categoria_id"],
@@ -205,11 +206,11 @@ export async function initializeDatabase() {
       await createIndexIfNotExists(table, name, col);
     }
 
-    console.log("✅ Índices de performance verificados.");
+    logger.info("✅ Índices de performance verificados.");
 
     const { rows: userCount } = await pool.query("SELECT COUNT(*) AS total FROM usuarios");
     if (Number(userCount[0].total) === 0) {
-      console.log("🌱 Banco vazio — inserindo dados iniciais...");
+      logger.info("🌱 Banco vazio — inserindo dados iniciais...");
       const senhaHash = await bcrypt.hash("123456", 10);
 
       await pool.query(
@@ -248,10 +249,10 @@ export async function initializeDatabase() {
         [p1Rows[0].id, p2Rows[0].id]
       );
 
-      console.log("✅ Dados iniciais inseridos.");
+      logger.info("✅ Dados iniciais inseridos.");
     }
   } catch (err) {
-    console.error("❌ Falha ao inicializar o banco PostgreSQL:", err);
+    logger.fatal({ err }, "❌ Falha ao inicializar o banco PostgreSQL");
     process.exit(1);
   }
 }

@@ -114,9 +114,12 @@ export default function AuthPage({ setView }) {
           </p>
         </div>
 
-        <div className="auth-tabs" style={{ display: "flex", borderBottom: "1px solid var(--border-light)", marginBottom: "20px" }}>
+        <div className="auth-tabs" role="tablist" style={{ display: "flex", borderBottom: "1px solid var(--border-light)", marginBottom: "20px" }}>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "login"}
+            aria-controls="login-panel"
             className={`auth-tab ${activeTab === "login" ? "is-active" : ""}`}
             style={{ flex: 1, background: "none", border: "none", color: activeTab === "login" ? "var(--text-dark)" : "var(--color-hint)", borderBottom: activeTab === "login" ? "2px solid var(--primary-accent)" : "none", padding: "10px", cursor: "pointer", fontWeight: "600" }}
             onClick={() => setActiveTab("login")}
@@ -125,6 +128,9 @@ export default function AuthPage({ setView }) {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "signup"}
+            aria-controls="signup-panel"
             className={`auth-tab ${activeTab === "signup" ? "is-active" : ""}`}
             style={{ flex: 1, background: "none", border: "none", color: activeTab === "signup" ? "var(--text-dark)" : "var(--color-hint)", borderBottom: activeTab === "signup" ? "2px solid var(--primary-accent)" : "none", padding: "10px", cursor: "pointer", fontWeight: "600" }}
             onClick={() => setActiveTab("signup")}
@@ -134,7 +140,7 @@ export default function AuthPage({ setView }) {
         </div>
 
         {activeTab === "login" ? (
-          <form onSubmit={handleLoginSubmit}>
+          <form onSubmit={handleLoginSubmit} role="tabpanel" id="login-panel">
             <div className="form-group" style={{ marginBottom: "16px" }}>
               <label htmlFor="loginEmail" style={{ display: "block", marginBottom: "6px", fontSize: "12px", textTransform: "uppercase", fontWeight: "600" }}>Email Address</label>
               <input

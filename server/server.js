@@ -6,6 +6,7 @@
 import express  from "express";
 import cors     from "cors";
 import dotenv   from "dotenv";
+import logger   from "./utils/logger.js";
 import { initializeDatabase } from "./config/db.js";
 import helmet   from "helmet";
 import rateLimit from "express-rate-limit";
@@ -73,7 +74,7 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Logger de requisições
 app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString().split("T")[1].slice(0, 8)}] ${req.method} ${req.url}`);
+  logger.info(`${req.method} ${req.url}`);
   next();
 });
 
@@ -95,14 +96,14 @@ app.get("/health", (req, res) => {
 
 // Global 404 Handler - Para interceptar rotas não encontradas
 app.use((req, res, next) => {
-  console.log(`[404] Route Not Found: ${req.method} ${req.originalUrl}`);
+  logger.info(`[404] Route Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ success: false, error: `Rota não encontrada: ${req.method} ${req.originalUrl}` });
 });
 
 // ── Handler Global de Erros ───────────────────────────────
 app.use((err, req, res, next) => {
-  console.error("Unhanded server error:", err);
-  res.status(500).json({ success: false, error: "Something went wrong on the server." });
+  logger.error({ err, req: { method: req.method, url: req.url } }, "Unhandled Error");
+  res.status(500).json({ success: false, error: "Ocorreu um erro interno no servidor." });
 });
 
 // ── Inicialização ─────────────────────────────────────────
@@ -111,21 +112,18 @@ async function startServer() {
   await initializeDatabase();
 
   app.listen(PORT, () => {
-    console.log("==================================================");
-    console.log(`🚀 OPTICUS Backend rodando na porta ${PORT}`);
-    console.log(`📡 API: http://localhost:${PORT}`);
-    console.log(`🗄️  Banco: PostgreSQL (${process.env.DB_NAME || "opticus_db"})`);
-    console.log("==================================================");
-    console.log("📌 Endpoints disponíveis:");
-    console.log("   POST /api/auth/register");
-    console.log("   POST /api/auth/login");
-    console.log("   GET  /api/products");
-    console.log("   GET  /api/categories");
-    console.log("   GET  /api/stock");
-    console.log("   GET  /api/orders");
-    console.log("   GET  /api/payments");
-    console.log("==================================================");
+    logger.info(`🚀 OPTICUS Backend rodando na porta ${PORT}`);
   });
 }
+
+// Trata rejections e exceptions para o servidor não cair silenciosamente
+process.on("unhandledRejection", (reason, promise) => {
+  logger.fatal({ reason, promise }, "Unhandled Rejection");
+});
+
+process.on("uncaughtException", (error) => {
+  logger.fatal({ error }, "Uncaught Exception");
+  process.exit(1);
+});
 
 startServer();

@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import { useTranslation } from "./contexts/LanguageContext";
 import { Check, X } from "lucide-react";
 import { FactoryDashboard, StaffDashboard } from "./components/Dashboards";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy Loading para os componentes pesados
 const Marketplace = lazy(() => import("./components/Marketplace"));
@@ -76,16 +77,18 @@ function AppContent() {
             Carregando interface...
           </div>
         }>
-          <Routes>
-            <Route path="/" element={<Marketplace setView={setViewLegacy} />} />
-            <Route path="/designs" element={<DesignsGallery setView={setViewLegacy} />} />
-            <Route path="/create" element={<CreatorStudio setView={setViewLegacy} />} />
-            <Route path="/cart" element={<Cart setView={setViewLegacy} />} />
-            <Route path="/login" element={<AuthPage setView={setViewLegacy} />} />
-            <Route path="/factory-dashboard" element={<FactoryDashboard />} />
-            <Route path="/staff-dashboard" element={<StaffDashboard />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Marketplace setView={setViewLegacy} />} />
+              <Route path="/designs" element={<DesignsGallery setView={setViewLegacy} />} />
+              <Route path="/create" element={<CreatorStudio setView={setViewLegacy} />} />
+              <Route path="/cart" element={<Cart setView={setViewLegacy} />} />
+              <Route path="/login" element={<AuthPage setView={setViewLegacy} />} />
+              <Route path="/factory-dashboard" element={<FactoryDashboard />} />
+              <Route path="/staff-dashboard" element={<StaffDashboard />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ErrorBoundary>
         </Suspense>
       </main>
 
