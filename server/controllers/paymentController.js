@@ -345,8 +345,8 @@ export async function confirmSimulatedPayment(req, res) {
         const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
         const allowedHosts = ["localhost", new URL(FRONTEND_URL).hostname];
         
-        if (allowedHosts.includes(url.hostname)) {
-          redirectUrl = `${returnTo}/?payment=success`;
+        if (allowedHosts.includes(url.hostname) || url.hostname.endsWith('.vercel.app')) {
+          redirectUrl = `${returnTo.replace(/\/$/, '')}/?payment=success`;
         } else {
           console.warn("[Security] Bloqueado open redirect para:", url.hostname);
         }
