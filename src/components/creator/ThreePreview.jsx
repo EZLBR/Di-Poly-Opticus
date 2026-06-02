@@ -72,6 +72,31 @@ export default function ThreePreview() {
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // Environment Map for realistic reflections on metals & lenses
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const envCanvas = document.createElement('canvas');
+    envCanvas.width = 256;
+    envCanvas.height = 256;
+    const envCtx = envCanvas.getContext('2d');
+    const envGrad = envCtx.createLinearGradient(0, 0, 0, 256);
+    envGrad.addColorStop(0, '#ffffff');
+    envGrad.addColorStop(0.2, '#f0f4ff');
+    envGrad.addColorStop(0.5, '#c8d8f0');
+    envGrad.addColorStop(0.8, '#8aa4cc');
+    envGrad.addColorStop(1, '#3a5070');
+    envCtx.fillStyle = envGrad;
+    envCtx.fillRect(0, 0, 256, 256);
+    envCtx.fillStyle = 'rgba(255,255,255,0.45)';
+    envCtx.beginPath(); envCtx.arc(64, 38, 28, 0, Math.PI * 2); envCtx.fill();
+    envCtx.beginPath(); envCtx.arc(200, 76, 18, 0, Math.PI * 2); envCtx.fill();
+    const envTex = new THREE.CanvasTexture(envCanvas);
+    envTex.mapping = THREE.EquirectangularReflectionMapping;
+    const envMap = pmremGenerator.fromEquirectangular(envTex).texture;
+    scene.environment = envMap;
+    envTex.dispose();
+    pmremGenerator.dispose();
+
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.22);
     scene.add(ambient);
@@ -330,7 +355,7 @@ export default function ThreePreview() {
       }
 
       if (isLeft) {
-        const points = shape.getPoints(24);
+        const points = shape.getPoints(48);
         const mirroredShape = new THREE.Shape();
         const mirroredPoints = points.map(p => new THREE.Vector2(-p.x, p.y)).reverse();
         mirroredShape.moveTo(mirroredPoints[0].x, mirroredPoints[0].y);
@@ -358,53 +383,126 @@ export default function ThreePreview() {
     const frontGroup = new THREE.Group();
     rootGroup.add(frontGroup);
 
+    // --- Lens Curvature Helper ---
+    const applyLensCurvature = (geometry, radius = 10) => {
+      const positions = geometry.attributes.position;
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+        const dist2 = x * x + y * y;
+        const dz = radius - Math.sqrt(Math.max(0.001, radius * radius - dist2));
+        positions.setZ(i, z + dz);
+      }
+      positions.needsUpdate = true;
+      geometry.computeVertexNormals();
+    };
+
+    const wrapAngle = 0.10; // Facial wrap curvature (radians)
+
+    // --- Right Rim ---
     const outerShapeRight = getLensShape(safeFrontModel, outerX, outerY, false);
     const innerShapeRight = getLensShape(safeFrontModel, lensX, lensY, false);
     outerShapeRight.holes.push(innerShapeRight);
-    const rimGeoRight = new THREE.ExtrudeGeometry(outerShapeRight, { depth: adjustedFrameDepth, bevelEnabled: true, bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18, bevelSegments: 3, curveSegments: 24 }).center();
-    
-    const lensShapeRight = getLensShape(safeFrontModel, lensX, lensY, false);
-    const lensGeoRight = new THREE.ExtrudeGeometry(lensShapeRight, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2, curveSegments: 24 }).center();
+    const rimGeoRight = new THREE.ExtrudeGeometry(outerShapeRight, {
+      depth: adjustedFrameDepth, bevelEnabled: true,
+      bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18,
+      bevelSegments: 5, curveSegments: 48
+    }).center();
 
+    // --- Right Lens (curved) ---
+    const lensShapeRight = getLensShape(safeFrontModel, lensX, lensY, false);
+    const lensGeoRight = new THREE.ExtrudeGeometry(lensShapeRight, {
+      depth: 0.06, bevelEnabled: true,
+      bevelThickness: 0.008, bevelSize: 0.008,
+      bevelSegments: 3, curveSegments: 48
+    }).center();
+    applyLensCurvature(lensGeoRight, 10);
+
+    // --- Left Rim ---
     const outerShapeLeft = getLensShape(safeFrontModel, outerX, outerY, true);
     const innerShapeLeft = getLensShape(safeFrontModel, lensX, lensY, true);
     outerShapeLeft.holes.push(innerShapeLeft);
-    const rimGeoLeft = new THREE.ExtrudeGeometry(outerShapeLeft, { depth: adjustedFrameDepth, bevelEnabled: true, bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18, bevelSegments: 3, curveSegments: 24 }).center();
-    
-    const lensShapeLeft = getLensShape(safeFrontModel, lensX, lensY, true);
-    const lensGeoLeft = new THREE.ExtrudeGeometry(lensShapeLeft, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.005, bevelSegments: 2, curveSegments: 24 }).center();
+    const rimGeoLeft = new THREE.ExtrudeGeometry(outerShapeLeft, {
+      depth: adjustedFrameDepth, bevelEnabled: true,
+      bevelThickness: adjustedFrameDepth * 0.18, bevelSize: adjustedFrameDepth * 0.18,
+      bevelSegments: 5, curveSegments: 48
+    }).center();
 
+    // --- Left Lens (curved) ---
+    const lensShapeLeft = getLensShape(safeFrontModel, lensX, lensY, true);
+    const lensGeoLeft = new THREE.ExtrudeGeometry(lensShapeLeft, {
+      depth: 0.06, bevelEnabled: true,
+      bevelThickness: 0.008, bevelSize: 0.008,
+      bevelSegments: 3, curveSegments: 48
+    }).center();
+    applyLensCurvature(lensGeoLeft, 10);
+
+    // --- Assemble Front + Facial Wrap ---
     const rightRim = new THREE.Mesh(rimGeoRight, frameMat); rightRim.position.set(lensOffsetX, 0, 0); rightRim.castShadow = true; frontGroup.add(rightRim);
     const leftRim = new THREE.Mesh(rimGeoLeft, frameMat); leftRim.position.set(-lensOffsetX, 0, 0); leftRim.castShadow = true; frontGroup.add(leftRim);
     const rightLens = new THREE.Mesh(lensGeoRight, lensMat); rightLens.position.set(lensOffsetX, 0, adjustedFrameDepth * 0.12); frontGroup.add(rightLens);
     const leftLens = new THREE.Mesh(lensGeoLeft, lensMat); leftLens.position.set(-lensOffsetX, 0, adjustedFrameDepth * 0.12); frontGroup.add(leftLens);
 
-    // Bridge
+    // Apply facial wrap — rotates each side outward like real glasses
+    rightRim.rotation.y = -wrapAngle;
+    rightLens.rotation.y = -wrapAngle;
+    leftRim.rotation.y = wrapAngle;
+    leftLens.rotation.y = wrapAngle;
+
+    // Bridge (anatomical 7-point curve)
     const bw = frontDims.bridgeWidth;
     const bridgeCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-bw * 0.5, 0.10, 0),
-      new THREE.Vector3(-bw * 0.18, -0.06, 0.03),
-      new THREE.Vector3(bw * 0.18, -0.06, 0.03),
-      new THREE.Vector3(bw * 0.5, 0.10, 0)
+      new THREE.Vector3(-bw * 0.55, 0.14, -0.02),
+      new THREE.Vector3(-bw * 0.38, 0.06, 0.05),
+      new THREE.Vector3(-bw * 0.15, -0.06, 0.08),
+      new THREE.Vector3(0, -0.09, 0.09),
+      new THREE.Vector3(bw * 0.15, -0.06, 0.08),
+      new THREE.Vector3(bw * 0.38, 0.06, 0.05),
+      new THREE.Vector3(bw * 0.55, 0.14, -0.02)
     ]);
-    const bridgeGeo = new THREE.TubeGeometry(bridgeCurve, 28, Math.max(0.04, frontDims.thickness * 0.3), 12, false);
+    const bridgeGeo = new THREE.TubeGeometry(bridgeCurve, 40, Math.max(0.04, frontDims.thickness * 0.3), 16, false);
     const bridgeMesh = new THREE.Mesh(bridgeGeo, frameMat);
     bridgeMesh.position.set(0, -0.03, adjustedFrameDepth * 0.02);
     bridgeMesh.castShadow = true;
     frontGroup.add(bridgeMesh);
 
-    // Nose Pads
-    const padGeo = new THREE.CapsuleGeometry(0.08, 0.25, 4, 8);
+    // Nose Pads (teardrop-shaped with wire arms)
+    const padShape = new THREE.Shape();
+    padShape.moveTo(0, 0.11);
+    padShape.bezierCurveTo(0.055, 0.11, 0.08, 0.055, 0.08, 0);
+    padShape.bezierCurveTo(0.08, -0.07, 0.045, -0.12, 0, -0.14);
+    padShape.bezierCurveTo(-0.045, -0.12, -0.08, -0.07, -0.08, 0);
+    padShape.bezierCurveTo(-0.08, 0.055, -0.055, 0.11, 0, 0.11);
+    const padGeo = new THREE.ExtrudeGeometry(padShape, {
+      depth: 0.035, bevelEnabled: true, bevelThickness: 0.012,
+      bevelSize: 0.012, bevelSegments: 4, curveSegments: 20
+    }).center();
+
+    // Pad wire arms
+    const padArmR = 0.018;
+    const rPadArmCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(lensOffsetX - lensX * 0.65, -lensY * 0.05, adjustedFrameDepth * 0.1),
+      new THREE.Vector3(lensOffsetX - lensX * 0.72, -lensY * 0.12, -0.05),
+      new THREE.Vector3(lensOffsetX - lensX * 0.78, -lensY * 0.18, -0.18)
+    ]);
+    frontGroup.add(new THREE.Mesh(new THREE.TubeGeometry(rPadArmCurve, 12, padArmR, 8, false), hingeMat));
+
     const rightPad = new THREE.Mesh(padGeo, padMat);
-    rightPad.position.set(lensOffsetX - lensX * 0.8, -lensY * 0.2, -0.2);
-    rightPad.rotation.z = -0.3;
-    rightPad.rotation.x = -0.2;
+    rightPad.position.set(lensOffsetX - lensX * 0.78, -lensY * 0.22, -0.22);
+    rightPad.rotation.set(-0.35, 0.15, -0.25);
     frontGroup.add(rightPad);
-    
+
+    const lPadArmCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-(lensOffsetX - lensX * 0.65), -lensY * 0.05, adjustedFrameDepth * 0.1),
+      new THREE.Vector3(-(lensOffsetX - lensX * 0.72), -lensY * 0.12, -0.05),
+      new THREE.Vector3(-(lensOffsetX - lensX * 0.78), -lensY * 0.18, -0.18)
+    ]);
+    frontGroup.add(new THREE.Mesh(new THREE.TubeGeometry(lPadArmCurve, 12, padArmR, 8, false), hingeMat));
+
     const leftPad = new THREE.Mesh(padGeo, padMat);
-    leftPad.position.set(-(lensOffsetX - lensX * 0.8), -lensY * 0.2, -0.2);
-    leftPad.rotation.z = 0.3;
-    leftPad.rotation.x = -0.2;
+    leftPad.position.set(-(lensOffsetX - lensX * 0.78), -lensY * 0.22, -0.22);
+    leftPad.rotation.set(-0.35, -0.15, 0.25);
     frontGroup.add(leftPad);
 
     // Temples & Hinges
@@ -427,32 +525,72 @@ export default function ThreePreview() {
     const rightHinge = new THREE.Mesh(hingeGeo, hingeMat); rightPivot.add(rightHinge);
     const leftHinge = new THREE.Mesh(hingeGeo, hingeMat); leftPivot.add(leftHinge);
 
-    // Temple arms
+    // Temple arms (flat rectangular cross-section along curved path)
     const armCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.04, 0.02, -templeLen * 0.15),
       new THREE.Vector3(0.05, 0, -templeLen * 0.3),
-      new THREE.Vector3(0.02, -0.05, -templeLen * 0.6),
+      new THREE.Vector3(0.03, -0.03, -templeLen * 0.5),
+      new THREE.Vector3(0.02, -0.05, -templeLen * 0.65),
+      new THREE.Vector3(-0.02, -0.25, -templeLen * 0.85),
       new THREE.Vector3(-0.05, -0.4, -templeLen)
     ]);
-    // Use templeDims for the thickness of the temple
-    const armGeo = new THREE.TubeGeometry(armCurve, 32, templeDims.thickness * 0.4 * thicknessMul, 8, false);
-    
+
+    // Flat rounded-rectangle cross section
+    const tw = templeDims.thickness * 0.55 * thicknessMul;
+    const tth = templeDims.thickness * 0.2 * thicknessMul;
+    const tcr = Math.min(tw, tth) * 0.4;
+    const templeProfile = new THREE.Shape();
+    templeProfile.moveTo(-tw + tcr, -tth);
+    templeProfile.lineTo(tw - tcr, -tth);
+    templeProfile.quadraticCurveTo(tw, -tth, tw, -tth + tcr);
+    templeProfile.lineTo(tw, tth - tcr);
+    templeProfile.quadraticCurveTo(tw, tth, tw - tcr, tth);
+    templeProfile.lineTo(-tw + tcr, tth);
+    templeProfile.quadraticCurveTo(-tw, tth, -tw, tth - tcr);
+    templeProfile.lineTo(-tw, -tth + tcr);
+    templeProfile.quadraticCurveTo(-tw, -tth, -tw + tcr, -tth);
+
+    const armGeo = new THREE.ExtrudeGeometry(templeProfile, {
+      extrudePath: armCurve, steps: 60, bevelEnabled: false
+    });
     const rightArm = new THREE.Mesh(armGeo, frameMat); rightArm.castShadow = true; rightPivot.add(rightArm);
-    
+
     const armCurveLeft = new THREE.CatmullRomCurve3(armCurve.points.map(p => new THREE.Vector3(-p.x, p.y, p.z)));
-    const armGeoLeft = new THREE.TubeGeometry(armCurveLeft, 32, templeDims.thickness * 0.4 * thicknessMul, 8, false);
+    const armGeoLeft = new THREE.ExtrudeGeometry(templeProfile, {
+      extrudePath: armCurveLeft, steps: 60, bevelEnabled: false
+    });
     const leftArm = new THREE.Mesh(armGeoLeft, frameMat); leftArm.castShadow = true; leftPivot.add(leftArm);
 
-    // Temple Tips
+    // Temple Tips (slightly thicker, soft material)
+    const tipW = tw * 1.1;
+    const tipTh = tth * 1.3;
+    const tipR = Math.min(tipW, tipTh) * 0.5;
+    const tipProfile = new THREE.Shape();
+    tipProfile.moveTo(-tipW + tipR, -tipTh);
+    tipProfile.lineTo(tipW - tipR, -tipTh);
+    tipProfile.quadraticCurveTo(tipW, -tipTh, tipW, -tipTh + tipR);
+    tipProfile.lineTo(tipW, tipTh - tipR);
+    tipProfile.quadraticCurveTo(tipW, tipTh, tipW - tipR, tipTh);
+    tipProfile.lineTo(-tipW + tipR, tipTh);
+    tipProfile.quadraticCurveTo(-tipW, tipTh, -tipW, tipTh - tipR);
+    tipProfile.lineTo(-tipW, -tipTh + tipR);
+    tipProfile.quadraticCurveTo(-tipW, -tipTh, -tipW + tipR, -tipTh);
+
     const tipCurveRight = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.02, -0.05, -templeLen * 0.6),
+      new THREE.Vector3(0.02, -0.05, -templeLen * 0.65),
+      new THREE.Vector3(-0.02, -0.25, -templeLen * 0.85),
       new THREE.Vector3(-0.05, -0.4, -templeLen)
     ]);
-    const tipGeoRight = new THREE.TubeGeometry(tipCurveRight, 16, templeDims.thickness * 0.45 * thicknessMul, 8, false);
+    const tipGeoRight = new THREE.ExtrudeGeometry(tipProfile, {
+      extrudePath: tipCurveRight, steps: 24, bevelEnabled: false
+    });
     const rightTip = new THREE.Mesh(tipGeoRight, tipMat); rightPivot.add(rightTip);
 
     const tipCurveLeft = new THREE.CatmullRomCurve3(tipCurveRight.points.map(p => new THREE.Vector3(-p.x, p.y, p.z)));
-    const tipGeoLeft = new THREE.TubeGeometry(tipCurveLeft, 16, templeDims.thickness * 0.45 * thicknessMul, 8, false);
+    const tipGeoLeft = new THREE.ExtrudeGeometry(tipProfile, {
+      extrudePath: tipCurveLeft, steps: 24, bevelEnabled: false
+    });
     const leftTip = new THREE.Mesh(tipGeoLeft, tipMat); leftPivot.add(leftTip);
 
     // Final reposition
