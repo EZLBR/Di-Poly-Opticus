@@ -38,13 +38,9 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permite requisições sem origin (Postman, mobile, curl)
     if (!origin) return callback(null, true);
-    // Permite qualquer subdomínio do Vercel apenas se estritamente listado em allowedOrigins
-    // (A regra .endsWith('.vercel.app') era muito permissiva)
-    // Permite o próprio Render (para a tela de simulação de pagamento bater nela mesma)
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
     if (origin.endsWith(".onrender.com")) return callback(null, true);
-    // Verifica lista de origens permitidas
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS bloqueado para origem: ${origin}`));
   },
