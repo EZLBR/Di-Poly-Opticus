@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext";
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const { isBackendConnected, orders, setOrders } = useAuth(); // for fallback simulation needs
+  const { isBackendConnected } = useAuth();
   let API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
   if (API_URL.endsWith('/')) API_URL = API_URL.slice(0, -1);
   if (!API_URL.endsWith('/api')) API_URL = `${API_URL}/api`;
@@ -66,7 +66,8 @@ export function CartProvider({ children }) {
 
     // Fallback simulation
     const simulatedBillingId = `bill-sim-${Math.floor(100000 + Math.random() * 900000)}`;
-    const nextOrders = [...orders];
+    const localOrdersRaw = localStorage.getItem("opticus_orders");
+    const nextOrders = localOrdersRaw ? JSON.parse(localOrdersRaw) : [];
 
     const localCreatedOrders = [];
 
@@ -92,7 +93,6 @@ export function CartProvider({ children }) {
     }
 
     localStorage.setItem("opticus_orders", JSON.stringify(nextOrders));
-    setOrders(nextOrders);
 
     return { success: true, isOffline: true, createdOrders: localCreatedOrders };
   };
