@@ -10,19 +10,28 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
 
-const poolConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT) || 5432,
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "postgres",
-  database: process.env.DB_NAME || "opticus_db",
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000, // 15 seconds for slow cold starts
-};
+const poolConfig = process.env.DATABASE_URL 
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 15000,
+    }
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: Number(process.env.DB_PORT) || 5432,
+      user: process.env.DB_USER || "postgres",
+      password: process.env.DB_PASSWORD || "postgres",
+      database: process.env.DB_NAME || "opticus_db",
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 15000,
+    };
 
 // Always use SSL for Supabase to prevent connection hangs
-if (process.env.DB_SSL === "true" || poolConfig.host.includes("supabase.com")) {
+if (process.env.DB_SSL === "true" || 
+   (poolConfig.host && poolConfig.host.includes("supabase.com")) || 
+   (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("supabase.com"))) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 
