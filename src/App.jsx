@@ -51,9 +51,15 @@ function AppContent() {
 
   // Aplica classes visuais no body dependendo da rota
   useEffect(() => {
-    document.body.classList.remove("page-marketplace", "page-create");
+    document.body.classList.remove("page-marketplace", "page-create", "page-cart", "page-auth", "page-designs");
     if (location.pathname === "/create") {
       document.body.classList.add("page-create");
+    } else if (location.pathname === "/cart") {
+      document.body.classList.add("page-cart");
+    } else if (location.pathname === "/login") {
+      document.body.classList.add("page-auth");
+    } else if (location.pathname === "/designs") {
+      document.body.classList.add("page-designs");
     } else {
       document.body.classList.add("page-marketplace");
     }

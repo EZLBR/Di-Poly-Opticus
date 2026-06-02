@@ -98,14 +98,14 @@ export default function DesignsGallery({ setView }) {
         </section>
 
         <section className="products" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "30px", marginTop: "40px" }}>
-          {designs.length === 0 ? (
+          {(!designs || designs.length === 0) ? (
             <div className="empty-state" style={{ gridColumn: "1/-1", textAlign: "center", padding: "100px 0", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
               <h3 style={{ marginBottom: "10px" }}>No designs saved yet</h3>
               <p style={{ color: "var(--color-hint)" }}>Open the Studio to start crafting your perfect frame.</p>
             </div>
           ) : (
-            designs.map((design, index) => {
-              const shape = design.model || "round";
+            (designs || []).map((design, index) => {
+              const shape = design?.model || "round";
               const material = design.isSunglasses ? "metal" : "acetate";
               const dateObj = design.created_at ? new Date(design.created_at) : new Date();
 
