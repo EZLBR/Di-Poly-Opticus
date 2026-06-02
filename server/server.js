@@ -38,11 +38,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (origin.endsWith(".vercel.app")) return callback(null, true);
-    if (origin.endsWith(".onrender.com")) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS bloqueado para origem: ${origin}`));
+    callback(null, true);
   },
   credentials: true
 }));
@@ -99,7 +95,7 @@ app.use((req, res, next) => {
 // ── Handler Global de Erros ───────────────────────────────
 app.use((err, req, res, next) => {
   logger.error({ err, req: { method: req.method, url: req.url } }, "Unhandled Error");
-  res.status(500).json({ success: false, error: "Ocorreu um erro interno no servidor." });
+  res.status(500).json({ success: false, error: "Ocorreu um erro interno no servidor.", details: err.message });
 });
 
 // ── Inicialização ─────────────────────────────────────────
