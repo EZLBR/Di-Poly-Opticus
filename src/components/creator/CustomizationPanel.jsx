@@ -150,11 +150,15 @@ export default function CustomizationPanel({ onSave, onOrder }) {
 
             <div>
               <label style={{ fontSize: "11px", fontWeight: "bold", color: "#888", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
-                {language === "pt" ? "Cores Curadas" : "Curated Colors"}
+                {language === "pt" ? "Cores" : "Colors"}
                 <span style={{ fontWeight: "normal", color: "#cbd5e1" }}>{color}</span>
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
-                {CURATED_COLORS.map((c) => (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", alignItems: "center" }}>
+                <div style={{ position: "relative", width: "100%", aspectRatio: "1", borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)", outline: !CURATED_COLORS.find(c => c.hex === color) ? "2px solid #000" : "none", outlineOffset: "2px", transform: !CURATED_COLORS.find(c => c.hex === color) ? "scale(1.15)" : "scale(1)", transition: "transform 0.2s" }}>
+                  <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ position: "absolute", opacity: 0, width: "200%", height: "200%", top: "-50%", left: "-50%", cursor: "pointer" }} title={language === "pt" ? "Cor Customizada" : "Custom Color"} />
+                  {!CURATED_COLORS.find(c => c.hex === color) && <Check size={14} color="#fff" style={{ zIndex: 1, filter: "drop-shadow(0px 0px 2px rgba(0,0,0,0.8))" }} />}
+                </div>
+                {CURATED_COLORS.slice(0, 4).map((c) => (
                   <button
                     key={c.hex}
                     style={{
