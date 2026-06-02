@@ -44,7 +44,10 @@ app.use(cors({
 }));
 
 // Segurança e Sanitização
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false,
+}));
 app.use(xss());
 
 // Limite de Requisições (Rate Limiting)
