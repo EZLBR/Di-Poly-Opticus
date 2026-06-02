@@ -10,7 +10,14 @@ import pool from "../config/db.js";
 //   GET /api/stock
 // ─────────────────────────────────────────────────────────
 export async function getAllStock(req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   try {
+    const countRes = await pool.query(`SELECT COUNT(*) FROM estoque e INNER JOIN produtos p ON p.id = e.produto_id WHERE p.ativo = TRUE`);
+    const totalCount = parseInt(countRes.rows[0].count);
+
     const { rows } = await pool.query(
       `SELECT
         e.id,
@@ -27,17 +34,25 @@ export async function getAllStock(req, res) {
        INNER JOIN produtos p ON p.id = e.produto_id
        LEFT JOIN categorias c ON c.id = p.categoria_id
        WHERE p.ativo = TRUE
-       ORDER BY e.quantidade ASC`
+       ORDER BY e.quantidade ASC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
-    // Separa os produtos com estoque crítico
+    // Separa os produtos com estoque crítico (desta página)
     const alertas = rows.filter(r => r.alerta_baixo_estoque);
 
     return res.json({
       success:  true,
       estoque:  rows,
       alertas:  alertas.length,
-      produtos_criticos: alertas.map(r => r.produto_nome)
+      produtos_criticos: alertas.map(r => r.produto_nome),
+      pagination: {
+        page,
+        limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
     });
 
   } catch (err) {

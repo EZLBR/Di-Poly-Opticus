@@ -4,6 +4,7 @@ import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Sparkles, Trash2, Edit, ShoppingCart } from "lucide-react";
 import * as THREE from "three";
+import { calculateBasePrice } from "../utils/pricing";
 
 import ThreePreview from "./ThreePreview";
 
@@ -37,10 +38,13 @@ export default function DesignsGallery({ setView }) {
   };
 
   const handleAddToCart = (design) => {
-    let price = 180;
-    if (design.isSunglasses) price += 40;
-    if (design.frameProfile === "bold") price += 20;
-    if (design.antiReflective) price += 15;
+    const price = calculateBasePrice({
+      isSunglasses: design.isSunglasses,
+      frameProfile: design.frameProfile,
+      lensTreatments: design.antiReflective ? ["anti-reflective"] : [],
+      frameMaterial: design.frameMaterial || "acetate",
+      lensMaterial: design.lensMaterial || "cr39"
+    });
 
     const cartItem = {
       id: design.id || `design-${Date.now()}`,

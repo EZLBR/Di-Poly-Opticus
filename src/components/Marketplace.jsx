@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Heart, Search, X, Edit, Eye, FolderHeart, Sparkles } from "lucide-react";
+import { calculateBasePrice } from "../utils/pricing";
 
 import ThreePreview from "./ThreePreview";
 
@@ -28,7 +29,7 @@ export default function Marketplace({ setView }) {
       name: "Aero Round",
       shape: "round",
       material: "metal",
-      price: 180,
+      price: calculateBasePrice({ frameMaterial: "metal" }),
       badge: "Best Seller"
     },
     {
@@ -36,7 +37,7 @@ export default function Marketplace({ setView }) {
       name: "Nova Square",
       shape: "square",
       material: "acetate",
-      price: 190,
+      price: calculateBasePrice({ frameMaterial: "acetate", frameProfile: "bold" }),
       badge: "New"
     },
     {
@@ -44,15 +45,15 @@ export default function Marketplace({ setView }) {
       name: "Luna Frame",
       shape: "round",
       material: "acetate",
-      price: 150,
+      price: calculateBasePrice({ frameMaterial: "acetate" }),
       badge: "Classic"
     },
     {
       id: "base-square-metal",
       name: "Titan Edge",
       shape: "square",
-      material: "metal",
-      price: 200,
+      material: "titanium",
+      price: calculateBasePrice({ frameMaterial: "titanium" }),
       badge: "Premium"
     }
   ];

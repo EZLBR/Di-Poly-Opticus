@@ -3,6 +3,7 @@ import { useTranslation } from "../contexts/LanguageContext";
 import { CreatorStudioProvider, useCreatorStudio } from "../contexts/CreatorStudioContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
+import { calculateBasePrice } from "../utils/pricing";
 
 import ThreePreview from "./creator/ThreePreview";
 import TryOnViewport from "./creator/TryOnViewport";
@@ -30,12 +31,13 @@ function CreatorStudioInner({ setView, onOpenDesigns }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleProduceClick = async () => {
-    let basePrice = 180;
-    if (isSunglasses) basePrice += 40;
-    if (frameProfile === "bold") basePrice += 20;
-    if (lensTreatments.length > 0) basePrice += (lensTreatments.length * 15);
-    if (frameMaterial === "titanium" || frameMaterial === "gold" || frameMaterial === "carbon_fiber") basePrice += 80;
-    if (lensMaterial === "polycarbonate") basePrice += 30;
+    const basePrice = calculateBasePrice({
+      isSunglasses,
+      frameProfile,
+      lensTreatments,
+      frameMaterial,
+      lensMaterial
+    });
 
     const orderData = {
       id: `custom-${Date.now()}`,

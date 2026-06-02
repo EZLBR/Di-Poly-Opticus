@@ -34,6 +34,29 @@ export async function register(req, res) {
     });
   }
 
+  // Validação de Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      error: "Formato de email inválido."
+    });
+  }
+
+  // Validação de Senha Forte
+  if (password.length < 8) {
+    return res.status(400).json({
+      success: false,
+      error: "A senha deve ter pelo menos 8 caracteres."
+    });
+  }
+  if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
+    return res.status(400).json({
+      success: false,
+      error: "A senha deve conter letras e números."
+    });
+  }
+
   // Security Fix: Ignore requested role and force "client" for public registration
   const userRole = "client";
   const userFactoryName = null;
@@ -195,7 +218,14 @@ export async function getMe(req, res) {
 //   GET /api/auth/users
 // ─────────────────────────────────────────────────────────
 export async function getUsers(req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   try {
+    const countRes = await pool.query(`SELECT COUNT(*) FROM usuarios`);
+    const totalCount = parseInt(countRes.rows[0].count);
+
     const { rows } = await pool.query(
       `SELECT
         id,
@@ -205,10 +235,21 @@ export async function getUsers(req, res) {
         factory_name AS "factoryName",
         criado_em    AS "createdAt"
        FROM usuarios
-       ORDER BY criado_em DESC`
+       ORDER BY criado_em DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
-    return res.json({ success: true, users: rows });
+    return res.json({ 
+      success: true, 
+      users: rows,
+      pagination: {
+        page,
+        limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
 
   } catch (err) {
     console.error("Erro ao listar usuários:", err);

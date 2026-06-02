@@ -102,24 +102,36 @@ export async function getOrders(req, res) {
     DATE(atualizado_em) AS "updatedAt"
   `;
 
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   try {
     let rows;
+    let totalCount = 0;
 
     if (role === "client") {
+      const countRes = await pool.query(`SELECT COUNT(*) FROM pedidos WHERE customer_email = $1`, [email]);
+      totalCount = parseInt(countRes.rows[0].count);
       const result = await pool.query(
-        `SELECT ${selectFields} FROM pedidos WHERE customer_email = $1 ORDER BY criado_em DESC`,
-        [email]
+        `SELECT ${selectFields} FROM pedidos WHERE customer_email = $1 ORDER BY criado_em DESC LIMIT $2 OFFSET $3`,
+        [email, limit, offset]
       );
       rows = result.rows;
     } else if (role === "factory") {
+      const countRes = await pool.query(`SELECT COUNT(*) FROM pedidos WHERE factory_id = $1`, [id]);
+      totalCount = parseInt(countRes.rows[0].count);
       const result = await pool.query(
-        `SELECT ${selectFields} FROM pedidos WHERE factory_id = $1 ORDER BY criado_em DESC`,
-        [id]
+        `SELECT ${selectFields} FROM pedidos WHERE factory_id = $1 ORDER BY criado_em DESC LIMIT $2 OFFSET $3`,
+        [id, limit, offset]
       );
       rows = result.rows;
     } else if (role === "staff") {
+      const countRes = await pool.query(`SELECT COUNT(*) FROM pedidos`);
+      totalCount = parseInt(countRes.rows[0].count);
       const result = await pool.query(
-        `SELECT ${selectFields} FROM pedidos ORDER BY criado_em DESC`
+        `SELECT ${selectFields} FROM pedidos ORDER BY criado_em DESC LIMIT $1 OFFSET $2`,
+        [limit, offset]
       );
       rows = result.rows;
     } else {
@@ -131,7 +143,16 @@ export async function getOrders(req, res) {
       customSpecs: r.customSpecs ? JSON.parse(r.customSpecs) : {}
     }));
 
-    return res.json({ success: true, orders: parsedRows });
+    return res.json({ 
+      success: true, 
+      orders: parsedRows,
+      pagination: {
+        page,
+        limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
 
   } catch (err) {
     console.error("Erro ao buscar pedidos:", err);

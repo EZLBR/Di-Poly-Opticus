@@ -38,7 +38,12 @@ export async function createBilling(req, res) {
       return res.status(404).json({ success: false, error: "Pedido não encontrado." });
     }
 
-    const order           = rows[0];
+    const order = rows[0];
+
+    // Security Fix: Verificar ownership
+    if (order.usuario_id !== req.user.id && req.user.role !== "staff") {
+      return res.status(403).json({ success: false, error: "Acesso negado: Este pedido pertence a outro usuário." });
+    }
     const amountInCents   = Math.round(Number(order.total) * 100);
     const isMockToken     = !ABACATE_TOKEN || ABACATE_TOKEN.includes("your_abacatepay_token_here");
     const frontendOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:5173`);
@@ -130,7 +135,14 @@ async function _registrarPagamento(pedidoId, metodo, status, valor, referenciaEx
 //   GET /api/payments  (apenas staff)
 // ─────────────────────────────────────────────────────────
 export async function getPayments(req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+
   try {
+    const countRes = await pool.query(`SELECT COUNT(*) FROM pagamentos`);
+    const totalCount = parseInt(countRes.rows[0].count);
+
     const { rows } = await pool.query(
       `SELECT
         pg.id,
@@ -144,10 +156,21 @@ export async function getPayments(req, res) {
         pd.customer_email     AS "clienteEmail"
        FROM pagamentos pg
        INNER JOIN pedidos pd ON pd.id = pg.pedido_id
-       ORDER BY pg.criado_em DESC`
+       ORDER BY pg.criado_em DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
-    return res.json({ success: true, pagamentos: rows });
+    return res.json({ 
+      success: true, 
+      pagamentos: rows,
+      pagination: {
+        page,
+        limit,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
 
   } catch (err) {
     console.error("Erro ao listar pagamentos:", err);
@@ -173,7 +196,7 @@ export async function handleWebhook(req, res) {
     const expected = crypto.createHmac("sha256", ABACATE_TOKEN).update(payloadString).digest("hex");
     if (signature !== expected) {
       console.warn("[Webhook] Assinatura inválida");
-      // Uncomment to enforce: return res.status(401).json({ success: false, error: "Assinatura inválida" });
+      return res.status(401).json({ success: false, error: "Assinatura inválida" });
     }
   }
 
@@ -319,8 +342,13 @@ export async function confirmSimulatedPayment(req, res) {
     if (returnTo) {
       try {
         const url = new URL(returnTo);
-        if (url.hostname === "localhost" || url.hostname.endsWith("vercel.app")) {
+        const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+        const allowedHosts = ["localhost", new URL(FRONTEND_URL).hostname];
+        
+        if (allowedHosts.includes(url.hostname)) {
           redirectUrl = `${returnTo}/?payment=success`;
+        } else {
+          console.warn("[Security] Bloqueado open redirect para:", url.hostname);
         }
       } catch (e) {
         console.warn("Invalid returnTo URL");
