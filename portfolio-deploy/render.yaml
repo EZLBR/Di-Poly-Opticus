@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: enzo-portfolio
+    runtime: node
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm run build:next
+    startCommand: pnpm run start:next -- -p $PORT
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
